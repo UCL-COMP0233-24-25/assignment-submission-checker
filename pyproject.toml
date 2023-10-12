@@ -1,0 +1,36 @@
+[project]
+name = "assignment-submission-checker"
+description = " A CLI tool to validate that your submission for a COMP0233 assignment has the correct file structure."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "William Graham", email = "william.graham@ucl.ac.uk" }]
+classifiers = ["Programming Language :: Python :: 3.10"]
+dependencies = ["gitpython"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = ["black", "check-manifest", "pre-commit"]
+
+[project.scripts]
+assignment-checker = "assignment_submission_checker:cli"
+
+[project.urls]
+
+[build-system]
+requires = ["setuptools >= 45", "setuptools-scm >= 6.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+target-version = ["py310"]
+line-length = 100
+
+[tool.check-manifest]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["assignment_checker"]
+
+[tool.setuptools_scm]
