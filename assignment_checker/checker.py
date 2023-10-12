@@ -1,8 +1,14 @@
+from pathlib import Path
+
 from .assignment import Assignment
 
 
-def check_submission(A: Assignment) -> None:
+def check_submission(A: Assignment, archive_location: Path = None) -> None:
     """ """
+    # If provided with an archive location, set this as the target
+    if archive_location is not None:
+        A.set_target_archive(archive_location)
+
     # Extract submission archive
     A.extract_to_temp_dir()
 
