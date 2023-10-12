@@ -29,3 +29,5 @@ def check_submission(A: Assignment) -> None:
         )
         for file in not_expected:
             print(f"\t{file}")
+
+    return

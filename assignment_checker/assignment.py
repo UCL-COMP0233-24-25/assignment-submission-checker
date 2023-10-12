@@ -17,8 +17,10 @@ import git
 class Assignment:
     # A name that can be assigned to the assignment for printing purposes
     name: str
-    # The path to the submission archive
-    archive: Path
+    # The path to the submission archive currently being examined.
+    # This should be set with the set_target_archive method,
+    # and it defaults to None.
+    target_archive: ClassVar[Path] = None
     # The location of the root of the git repository that should have been submitted.
     # If None, no git repository is expected.
     git_root: Path = None
@@ -38,7 +40,10 @@ class Assignment:
         """
         The name of the top-level folder that should appear after extracting the archive.
         """
-        return self.archive.name
+        if self.target_archive is not None:
+            return self.target_archive.name
+        else:
+            return None
 
     def __post_init__(self) -> None:
         """
@@ -48,6 +53,9 @@ class Assignment:
         self.tmp_dir = datetime().utcnow().strftime("%Y%m%d%H%M%S") + "".join(
             choices(ascii_letters + digits, k=16)
         )
+
+        if self.archive_tool not in ["tar", "zip"]:
+            raise ValueError(f"I don't recognise the compression tool {self.archive_tool}.")
 
         return
 
@@ -95,17 +103,26 @@ class Assignment:
 
         Removes / cleans the temporary directory if it already exists for safety.
         """
+        # If there is no current target archive set, raise error and halt
+        if self.target_archive is None:
+            raise ValueError(f"No target archive set, self.target_archive = {self.target_archive}.")
+
         # Clean temporary directory if it already exists
-        self._purge_tmp_dir()
+        self.purge_tmp_dir()
 
         # Create new temporary directory and extract submission folder into it
         os.mkdir(self.tmp_dir)
-        if self.archive_tool == "tar":
-            tarfile.open(self.archive).extractall(path=self.tmp_dir)
-        elif self.archive_tool == "zip":
-            zipfile.ZipFile(self.archive).extractall(path=self.tmp_dir)
-        else:
-            raise ValueError(f"I don't recognise the compression tool {self.archive_tool}.")
+
+        # Attempt extraction
+        try:
+            if self.archive_tool == "tar":
+                tarfile.open(self.target_archive).extractall(path=self.tmp_dir)
+            elif self.archive_tool == "zip":
+                zipfile.ZipFile(self.target_archive).extractall(path=self.tmp_dir)
+        except Exception as e:
+            raise RuntimeError(
+                f"ERROR: Could not extract the file {self.target_archive} using {self.archive_tool}, encountered the following error:\n\t{str(e)}.\nMake sure you have compressed your assignment using the correct compression tool (tar/zip) and have provided the correct path to your submission file."
+            )
 
         return
 
@@ -137,3 +154,16 @@ class Assignment:
         not_expected = list(set(all_files_present) - set(self.expected_files))
 
         return sorted(not_found), sorted(not_expected)
+
+    def set_target_archive(self, target: Path = None) -> None:
+        """
+        Set the self.target_archive member to the Path provided.
+
+        Throw an error if the target Path does not exist, unless it is None.
+        """
+        if (target is None) or os.path.exists(target):
+            self.target_archive = target
+        else:
+            raise FileNotFoundError(f"Could not locate an archive at {target}")
+
+        return
