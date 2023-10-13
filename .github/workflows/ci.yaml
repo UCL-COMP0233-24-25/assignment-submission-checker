@@ -1,0 +1,31 @@
+name: Test install
+
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "*"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  install:
+    name: Test install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python
+        with:
+          python-version: "3.10"
+      
+      - name: Attempt install
+        run: |
+          pip install .
+      
+      - name: Smoke test CLI help
+        run: |
+          assignment-checker --help
