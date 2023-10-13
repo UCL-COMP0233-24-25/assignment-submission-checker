@@ -2,6 +2,7 @@
 
 - [Assignment Submission Checker](#assignment-submission-checker)
   - [Overview](#overview)
+    - [Disclaimer](#disclaimer)
   - [Current Configuration](#current-configuration)
   - [Installation](#installation)
   - [Usage](#usage)
@@ -27,6 +28,14 @@ Specifically, the program will check that:
 - The submission's git repository (if present) is clean.
 - The submission contains all expected files, and these are located in the correct folders.
 - The submission does not contain any files that are not explicitly specified as part of the submission. Note that additional data files written by students, or images that need to be included as part of a report file (if requested) will also be flagged by this check. It can be disabled (at the user's risk) by passing the `-i`, (`--ignore-extra-files`) flag.
+
+### Disclaimer
+
+The `assignment-checker` does *not* provide any reflection or indication of the grade you may receive for a submission you make.
+It simply checks that the organisational structure of your submission matches that which is laid out in the assignment guidelines, so that you can be certain that your submission conforms to said specifications prior to making your submission.
+Here, "assignment" refers to the marked submission made for the assignment listed under the [current configuration](#current-configuration).
+
+Additionally, it cannot be used as evidence in the case of appeal against the grade awarded for an assignment.
 
 ## Current Configuration
 
