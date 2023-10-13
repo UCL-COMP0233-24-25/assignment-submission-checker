@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+
+exclude .gitignore
+
+graft assignment_checker
+
+prune tests
+prune .github
