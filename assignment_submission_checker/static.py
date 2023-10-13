@@ -6,11 +6,11 @@ from .assignment import Assignment
 
 COMP0233_2324_A1 = Assignment(
     name="COMP0233 Assignment 1: Rail Fare Prices (2023/24)",
-    git_root=Path("rail_network"),
+    git_root=Path("railway"),
     archive_tool="tar",
     expected_files=[
-        "rail_network/railway.py",
-        "rail_network/utilities.py",
-        "rail_network/test_rail_network.py",
+        "railway/railway.py",
+        "railway/utilities.py",
+        "railway/test_railway.py",
     ],
 )

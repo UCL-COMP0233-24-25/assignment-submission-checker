@@ -80,7 +80,7 @@ class Assignment:
             try:
                 repo = git.Repo(self.tmp_dir / f"{self.top_level_folder}" / self.git_root)
                 repo_present = True
-            except git.InvalidGitRepositoryError as e:
+            except Exception as e:
                 repo_present = False
                 repo_present_msg = f"Expected to find a git repository at {self.top_level_folder / self.git_root} but encountered an error:\n\t{str(e)}"
 
