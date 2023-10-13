@@ -50,7 +50,7 @@ class Assignment:
         Create a random string to use as the temporary directory for checking the submission status,
         once the __init__ method has set member variables.
         """
-        self.tmp_dir = datetime().utcnow().strftime("%Y%m%d%H%M%S") + "".join(
+        self.tmp_dir = datetime.utcnow().strftime("%Y%m%d%H%M%S") + "".join(
             choices(ascii_letters + digits, k=16)
         )
 

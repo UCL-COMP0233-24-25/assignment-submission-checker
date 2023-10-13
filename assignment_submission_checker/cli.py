@@ -13,7 +13,9 @@ DESCRIPTION = (
     f"The current version validates according to the format specified for: {CURRENT_ASSIGNMENT.name}"
 )
 
-if __name__ == "__main__":
+
+def cli():
+    """ """
     parser = argparse.ArgumentParser(description=DESCRIPTION)
 
     parser.add_argument(

@@ -1,5 +1,5 @@
 [project]
-name = "assignment-submission-checker"
+name = "assignment_submission_checker"
 description = " A CLI tool to validate that your submission for a COMP0233 assignment has the correct file structure."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -13,7 +13,7 @@ dynamic = ["version"]
 dev = ["black", "check-manifest", "pre-commit"]
 
 [project.scripts]
-assignment-checker = "assignment_submission_checker:cli"
+assignment-checker = "assignment_submission_checker.cli:cli"
 
 [project.urls]
 
@@ -31,6 +31,6 @@ line-length = 100
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["assignment_checker"]
+include = ["assignment_submission_checker"]
 
 [tool.setuptools_scm]
