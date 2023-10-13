@@ -16,6 +16,9 @@ dev = ["black", "check-manifest", "pre-commit"]
 assignment-checker = "assignment_submission_checker.cli:cli"
 
 [project.urls]
+homepage = "https://github.com/UCL-COMP0233-23-24/assignment-submission-checker"
+github = "https://github.com/UCL-COMP0233-23-24/assignment-submission-checker"
+bug-tracker = "https://github.com/UCL-COMP0233-23-24/assignment-submission-checker/issues"
 
 [build-system]
 requires = ["setuptools >= 45", "setuptools-scm >= 6.2", "wheel"]
