@@ -39,6 +39,14 @@ def cli():
         print(f"Currently configured for: {CURRENT_ASSIGNMENT.name}")
 
     if args.submission is not None:
-        check_submission(CURRENT_ASSIGNMENT, archive_location=args.submission)
+        try:
+            check_submission(CURRENT_ASSIGNMENT, archive_location=args.submission)
+        except Exception as e:
+            print(
+                f"The assignment-checker encountered an error - please open an issue describing the circumstances that lead to this error:\n{str(e)}"
+            )
+
+    # Always attempt cleanup (is safe if directory does not exist)
+    CURRENT_ASSIGNMENT.purge_tmp_dir()
 
     sys.exit(0)

@@ -41,7 +41,7 @@ class Assignment:
         The name of the top-level folder that should appear after extracting the archive.
         """
         if self.target_archive is not None:
-            return self.target_archive.name
+            return self.target_archive.stem.split(".")[0]  # .tar.gz has two suffixes
         else:
             return None
 
@@ -50,9 +50,11 @@ class Assignment:
         Create a random string to use as the temporary directory for checking the submission status,
         once the __init__ method has set member variables.
         """
-        self.tmp_dir = datetime.utcnow().strftime("%Y%m%d%H%M%S") + "".join(
-            choices(ascii_letters + digits, k=16)
+        self.tmp_dir = Path(
+            datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            + "".join(choices(ascii_letters + digits, k=16))
         )
+        self.git_root = Path(self.git_root)
 
         if self.archive_tool not in ["tar", "zip"]:
             raise ValueError(f"I don't recognise the compression tool {self.archive_tool}.")
@@ -76,7 +78,7 @@ class Assignment:
         if self.git_root is not None:
             # Attempt to find the repository
             try:
-                repo = git.Repo(self.tmp_dir / self.top_level_folder / self.git_root)
+                repo = git.Repo(self.tmp_dir / f"{self.top_level_folder}" / self.git_root)
                 repo_present = True
             except git.InvalidGitRepositoryError as e:
                 repo_present = False
@@ -142,9 +144,11 @@ class Assignment:
         Return two lists: the first of the files that were not found but expected, the second of files that were found but were not expected.
         """
         # Fetch all files present in the archive directory, excluding the .git repository
-        all_files_present = glob(
-            "**", root_dir=self.tmp_dir / self.top_level_folder, recursive=True
-        )
+        archive_root_dir = self.tmp_dir / self.top_level_folder
+        all_files_and_dirs = glob("**", root_dir=archive_root_dir, recursive=True)
+        all_files_present = [
+            file for file in all_files_and_dirs if not os.path.isdir(archive_root_dir / file)
+        ]
 
         # Determine which files are expected, but not present
         # This is the (set) complement of the expected files against those that were found
