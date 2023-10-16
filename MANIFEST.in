@@ -2,6 +2,7 @@ include README.md
 include LICENSE
 
 exclude .gitignore
+exclude .pre-commit-config.yaml
 
 graft assignment_checker
 

@@ -9,10 +9,24 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  pre-commit:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ucl/composite-actions/pre-commit@v1
+
   install:
     name: Test install
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,11 +35,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-      
+
       - name: Attempt install
         run: |
           pip install .
-      
+
       - name: Smoke test CLI help
         run: |
           assignment-checker --help

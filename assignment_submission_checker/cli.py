@@ -1,6 +1,6 @@
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from . import __version__
 from .checker import check_archive_name, check_submission

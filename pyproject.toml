@@ -30,6 +30,9 @@ line-length = 100
 
 [tool.check-manifest]
 
+[tool.isort]
+profile = "black"
+
 [tool.setuptools]
 include-package-data = true
 
