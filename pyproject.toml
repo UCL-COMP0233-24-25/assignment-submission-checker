@@ -10,7 +10,7 @@ dependencies = ["gitpython"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["black", "check-manifest", "pre-commit"]
+dev = ["black", "check-manifest", "pre-commit", "pytest", "tox >= 4"]
 
 [project.scripts]
 assignment-checker = "assignment_submission_checker.cli:cli"

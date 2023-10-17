@@ -6,9 +6,10 @@ from .printing import print_error, print_to_console, print_warning
 
 def check_archive_name(
     archive: Path, verbose: bool = True, expected_candidate_number: str = None
-) -> None:
+) -> bool:
     """ """
     archive_name = archive.stem.split(".")[0]  # In case of multiple . characters
+    name_is_ok = True
 
     # archive_name should be a candidate number,
     # so only numeric characters,
@@ -18,12 +19,14 @@ def check_archive_name(
             f"Your submission is named {archive_name}: this is not an 8-digit number.",
             "The archive should be named with your candidate number (8 digits), and no further characters.",
         )
+        name_is_ok = False
     elif expected_candidate_number is not None:
         if archive_name != expected_candidate_number:
             print_warning(
                 "Submission name and candidate number do not match.",
                 f"Submission is named {archive_name} but your candidate number is {expected_candidate_number}.",
             )
+            name_is_ok = False
         elif verbose:
             print_to_console(
                 f"Candidate number {expected_candidate_number} matches submission folder name."
@@ -33,7 +36,8 @@ def check_archive_name(
             f"Submission folder name is valid.",
             f"NOTE: your candidate number was inferred as {archive_name}, please check this is the case.",
         )
-    return
+
+    return name_is_ok
 
 
 def check_submission(

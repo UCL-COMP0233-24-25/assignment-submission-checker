@@ -43,3 +43,24 @@ jobs:
       - name: Smoke test CLI help
         run: |
           assignment-checker --help
+
+  test:
+    name: Run tests
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Attempt dev install
+        run: |
+          pip install .[dev]
+
+      - name: Run tests with tox
+        run: |
+          python -m tox
