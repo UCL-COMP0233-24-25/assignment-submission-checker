@@ -52,9 +52,9 @@ class BaseAssignmentTestingClass:
             git_root=Path("assignment"),
             archive_tool=tool,
             expected_files=[
-                "assignment/code_file_1.py",
-                "assignment/code_file_2.py",
-                "assignment/data/data_file_1.dat",
+                Path("assignment/code_file_1.py"),
+                Path("assignment/code_file_2.py"),
+                Path("assignment/data/data_file_1.dat"),
             ],
         )
 

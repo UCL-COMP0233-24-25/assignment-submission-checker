@@ -18,7 +18,7 @@ class TestFileFinder(BaseAssignmentTestingClass):
             pytest.param(DATA_DIR / "correct_format.tar.gz", [], [], id="Correct submission"),
             pytest.param(
                 DATA_DIR / "no_git_missing_files.tar.gz",
-                ["assignment/code_file_2.py"],
+                [Path("assignment/code_file_2.py")],
                 [],
                 id="Missing files",
             ),
@@ -26,8 +26,8 @@ class TestFileFinder(BaseAssignmentTestingClass):
                 DATA_DIR / "dirty_git_extra_files.tar.gz",
                 [],
                 [
-                    "assignment/README.md",
-                    "assignment/data/custom_data_file.dat",
+                    Path("assignment/README.md"),
+                    Path("assignment/data/custom_data_file.dat"),
                 ],
                 id="Extra files",
             ),
@@ -36,8 +36,8 @@ class TestFileFinder(BaseAssignmentTestingClass):
     def test_search_for_missing_files(
         self,
         placeholder_assignment: Assignment,
-        expected_missing: List[str],
-        expected_extra: List[str],
+        expected_missing: List[Path],
+        expected_extra: List[Path],
     ) -> None:
         """ """
         # Sort input lists just so that comparisons are easier

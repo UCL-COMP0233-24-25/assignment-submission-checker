@@ -9,8 +9,8 @@ COMP0233_2324_A1 = Assignment(
     git_root=Path("railway"),
     archive_tool="tar",
     expected_files=[
-        "railway/railway.py",
-        "railway/utilities.py",
-        "railway/test_railway.py",
+        Path("railway/railway.py"),
+        Path("railway/utilities.py"),
+        Path("railway/test_railway.py"),
     ],
 )

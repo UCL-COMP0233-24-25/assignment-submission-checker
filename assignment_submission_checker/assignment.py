@@ -12,6 +12,8 @@ from typing import ClassVar, List, Literal, Tuple
 
 import git
 
+from .utils import on_readonly_error
+
 
 @dataclass
 class Assignment:
@@ -33,7 +35,7 @@ class Assignment:
     archive_tool: Literal["tar", "zip"] = "tar"
     # List of files that are expected to be present in the submission archive,
     # given as relative paths from the TOP LEVEL of the extracted archive.
-    expected_files: List[str] = field(default_factory=lambda: [])
+    expected_files: List[Path] = field(default_factory=lambda: [])
 
     @property
     def top_level_folder(self) -> str:
@@ -54,6 +56,9 @@ class Assignment:
             datetime.utcnow().strftime("%Y%m%d%H%M%S")
             + "".join(choices(ascii_letters + digits, k=16))
         )
+        # Force absolute pathing to the temporary directory
+        self.tmp_dir = (Path(os.getcwd()) / self.tmp_dir).resolve()
+
         self.git_root = Path(self.git_root)
 
         if self.archive_tool not in ["tar", "zip"]:
@@ -133,11 +138,11 @@ class Assignment:
         Remove (if it exists) the temporary directory.
         """
         if os.path.exists(self.tmp_dir) and os.path.isdir(self.tmp_dir):
-            shutil.rmtree(self.tmp_dir)
+            shutil.rmtree(self.tmp_dir, onerror=on_readonly_error)
 
         return
 
-    def search_for_missing_files(self) -> Tuple[List[str], List[str]]:
+    def search_for_missing_files(self) -> Tuple[List[Path], List[Path]]:
         """
         Search the extracted archive for the files which are expected to be present in the submission.
 
@@ -147,7 +152,7 @@ class Assignment:
         archive_root_dir = self.tmp_dir / self.top_level_folder
         all_files_and_dirs = glob("**", root_dir=archive_root_dir, recursive=True)
         all_files_present = [
-            file for file in all_files_and_dirs if not os.path.isdir(archive_root_dir / file)
+            Path(file) for file in all_files_and_dirs if not os.path.isdir(archive_root_dir / file)
         ]
 
         # Determine which files are expected, but not present
