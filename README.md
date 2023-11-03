@@ -70,6 +70,17 @@ python -m pip install git+https://github.com/UCL-COMP0233-23-24/assignment-submi
 The package will then place a command-line program, `assignment-checker`, into your environment.
 You can run this program on the command line with the `-h` (`--help`) flag to see the usage pattern.
 
+### Updating
+
+If you want to update to the latest version of the `assignment-checker`, you can run the same install command as above.
+However, you may want to uninstall the old version first, just to make sure `pip` knows to fetch the latest version.
+Don't forget to run these in the same conda environment as you originally installed the assignment checker into!
+
+```bash
+python -m pip uninstall assignment-submission-checker                                           # Uninstall the old version, if you have it installed
+python -m pip install git+https://github.com/UCL-COMP0233-23-24/assignment-submission-checker   # Fetch the latest version from GitHub
+```
+
 ## Usage
 
 ```bash
