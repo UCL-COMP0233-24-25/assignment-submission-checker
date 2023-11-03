@@ -32,7 +32,7 @@ class BaseAssignmentTestingClass:
     extracted files (regardless of test result).
     """
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def placeholder_assignment(self, tool: Literal["tar", "zip"] = "tar") -> Assignment:
         """
         Standard template assignment that can be used for testing.
@@ -59,7 +59,7 @@ class BaseAssignmentTestingClass:
         )
 
     @pytest.fixture(
-        autouse=True
+        autouse=True, scope="function"
     )  # Refactor this into a base class, along with the placeholder fixture above, then subclass?
     @pytest.mark.parametrize("tool", ["tar"])
     def extract_run_teardown(self, placeholder_assignment: Assignment, data_path: Path) -> None:

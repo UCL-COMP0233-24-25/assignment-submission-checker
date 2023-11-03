@@ -14,10 +14,5 @@ def on_readonly_error(f: Callable[[Path], None], path: Path, exc_info) -> None:
 
     Usage : ``shutil.rmtree(path, onerror=on_readonly_error)``
     """
-    # Attempt multiple times to allow os time to close references
-    for _ in range(50):
-        try:
-            os.chmod(path, stat.S_IWRITE)
-            f(path)
-        except:
-            pass
+    os.chmod(path, stat.S_IWRITE)
+    f(path)

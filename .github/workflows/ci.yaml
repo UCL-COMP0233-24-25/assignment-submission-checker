@@ -61,10 +61,9 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Attempt dev install
+      - name: Setup tox
         run: |
-          pip install .[dev]
+          pip install tox tox-gh-actions
 
       - name: Run tests with tox
-        run: |
-          python -m tox
+        run: tox

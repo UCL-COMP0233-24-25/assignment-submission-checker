@@ -24,8 +24,8 @@ class TestGitDetection(BaseAssignmentTestingClass):
                 True,
                 id="Correct repo setup",
             ),
-            pytest.param(DATA_DIR / "no_git_missing_files.tar.gz", False, False, id="No git"),
             pytest.param(DATA_DIR / "dirty_git_extra_files.tar.gz", True, False, id="Dirty HEAD"),
+            pytest.param(DATA_DIR / "no_git_missing_files.tar.gz", False, False, id="No git"),
         ],
     )
     def test_git_detection(

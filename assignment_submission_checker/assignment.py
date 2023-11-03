@@ -102,6 +102,9 @@ class Assignment:
                         if changed:
                             repo_clean_msg = f"You have untracked changes to the following files in your git repository: {changed}"
 
+                # Close repo before ending function session
+                repo.close()
+
         return repo_present, repo_clean, repo_present_msg, repo_clean_msg
 
     def extract_to_temp_dir(self) -> None:
