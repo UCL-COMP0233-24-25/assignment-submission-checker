@@ -3,8 +3,10 @@
 - [Assignment Submission Checker](#assignment-submission-checker)
   - [Overview](#overview)
     - [Disclaimer](#disclaimer)
+    - [MacOS AppleDouble files](#macos-appledouble-files)
   - [Current Configuration](#current-configuration)
   - [Installation](#installation)
+    - [Updating](#updating)
   - [Usage](#usage)
     - [Common configuration options](#common-configuration-options)
       - [`-h`, `--help`](#-h---help)
@@ -36,6 +38,27 @@ It simply checks that the organisational structure of your submission matches th
 Here, "assignment" refers to the marked submission made for the assignment listed under the [current configuration](#current-configuration).
 
 Additionally, it cannot be used as evidence in the case of appeal against the grade awarded for an assignment.
+
+### MacOS AppleDouble files
+
+If you are running MacOS; you may encounter an issue where certain metadata files and folders are created when compressing or extracting your archive.
+These typically come with names like `._DS_store`, `_MACOSX`, or `._<name_of_an_actual_file_in_your_submission>`.
+The assignment checker will detect such files when it attempts to extract your submission, and will flag them accordingly.
+
+If you are creating your archive via `tar`, a possible workaround to avoid creation of these files is to pass the `--disable-copyfile`;
+
+```bash
+tar --disable-copyfile <usual_arguments_for_compressing>
+```
+
+If you cannot prevent the pollution of your archive with these files;
+
+- Clone your repository onto a UCL machine (or use remote desktop) to get access to a Windows machine, and create the archive on there.
+- If you are working on a group project, consider asking a member of your group who is using Windows or Linux to make the submission folder instead.
+
+If the above does not work, it is likely that the additional files are being created when your submission is being *extracted* rather than when they are being *compressed*.
+In this case, the assignment checker has some built-in robustness, but it cannot catch every case.
+You might consider using the `--ignore-extra-files` flag if you are confident that the only unexpected files are those such as this.
 
 ## Current Configuration
 
@@ -118,7 +141,9 @@ This information includes the current assignment that the program is configured 
 
 #### `-c`, `--check-cnumber`
 
-If you enter this option followed by your candidate number, the `assignment-checker` will also check that your candidate number matches the name of your submission folder.
+If you enter this option followed by your candidate/group number, the `assignment-checker` will also check that your candidate number matches the name of your submission folder.
+
+For individual assignments:
 
 ```bash
 $ assignment-checker -c 12345678 ./12345678.tar.gz
@@ -128,6 +153,19 @@ _________
 ! WARNING !
 Submission name and candidate number do not match.
 Submission is named 12345678 but your candidate number is 87654321.
+---------------------
+```
+
+For group assignments:
+
+```bash
+$ assignment-checker -c 01 ./working_group_01.tar.gz
+Candidate number 01 matches submission folder name.
+$ assignment-checker -c 10 ./working_group_01.tar.gz
+_________
+! WARNING !
+Submission name and candidate number do not match.
+Submission is named working_group_01 but your candidate number is 10.
 ---------------------
 ```
 
