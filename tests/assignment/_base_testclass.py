@@ -33,7 +33,9 @@ class BaseAssignmentTestingClass:
     """
 
     @pytest.fixture(scope="function")
-    def placeholder_assignment(self, tool: Literal["tar", "zip"] = "tar") -> Assignment:
+    def placeholder_assignment(
+        self, tool: Literal["tar", "zip"] = "tar", group: bool = False
+    ) -> Assignment:
         """
         Standard template assignment that can be used for testing.
 
@@ -50,6 +52,7 @@ class BaseAssignmentTestingClass:
         return Assignment(
             "Test assignment object",
             git_root=Path("assignment"),
+            group_assignment=group,
             archive_tool=tool,
             expected_files=[
                 Path("assignment/code_file_1.py"),

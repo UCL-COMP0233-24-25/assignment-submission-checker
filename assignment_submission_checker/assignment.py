@@ -26,6 +26,9 @@ class Assignment:
     # The location of the root of the git repository that should have been submitted.
     # If None, no git repository is expected.
     git_root: Path = None
+    # Whether this is a group assignment, which will flag an alternative expected name,
+    # as well as alternative directory structure.
+    group_assignment: bool = False
 
     # A name for the temporary directory in which the archive will be extracted,
     # then cleaned once checks are completed

@@ -64,7 +64,9 @@ You might consider using the `--ignore-extra-files` flag if you are confident th
 
 The latest version of this package is configured to validate a submission for:
 
-- COMP0233, academic year 2023/24, Assignment 1.
+- COMP0233, academic year 2023/24, Assignment 02.
+
+You may wish to [review previous versions](#changelog) if you are looking for a different assignment.
 
 ## Installation
 
@@ -160,15 +162,17 @@ For group assignments:
 
 ```bash
 $ assignment-checker -c 01 ./working_group_01.tar.gz
-Candidate number 01 matches submission folder name.
+Group number 01 matches submission folder name.
 $ assignment-checker -c 10 ./working_group_01.tar.gz
 _________
 ! WARNING !
-Submission name and candidate number do not match.
-Submission is named working_group_01 but your candidate number is 10.
+Submission name and group number do not match.
+Submission is named working_group_01 but your group number is 10.
 ---------------------
 ```
 
 ## Changelog
 
 Previous versions of this package are listed below; along with the corresponding assignment they validated against, if this was different to the previous version.
+
+- v0.1.0: Configured for COMP0233, assignment 01.

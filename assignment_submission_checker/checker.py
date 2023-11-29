@@ -40,6 +40,64 @@ def check_archive_name(
     return name_is_ok
 
 
+def check_archive_name_group(
+    archive: Path, verbose: bool = True, expected_group_number: str = None
+) -> bool:
+    """ """
+    archive_name = archive.stem.split(".")[0]  # In case of multiple . characters
+    name_is_ok = True
+
+    # archive_name should match working_group_XX.tar.gz
+    # XX might have special characters, in which case we need to catch those
+    split_archive_name = archive_name.split("_")
+    group_id = split_archive_name[-1]
+
+    # We also need to check if the expected group number was input as a single digit or not
+    # They should use the 2-digit code, but just in case we will catch
+    if expected_group_number is not None:
+        if expected_group_number.isdigit() and len(expected_group_number) == 1:
+            print_warning(
+                f"You have provided your expected group number as {expected_group_number} - this is not a 2-digit number.",
+                f"The checker will continue, but will be using an expected group number of {'0' + expected_group_number}",
+                f"We recommend you pass in the full group number (with leading zeros) in future.",
+            )
+            expected_group_number = "0" + expected_group_number
+
+    if (
+        (split_archive_name[0] != "working")
+        or (split_archive_name[1] != "group")
+        or (len(split_archive_name) != 3)
+    ):
+        print_warning(
+            f"Your submission is named {archive_name}: this does not match the pattern working_group_XX",
+        )
+        name_is_ok = False
+    elif group_id.isdigit() and len(group_id) == 1:
+        print_warning(
+            f"Your group number is provided as a single digit ({group_id}).",
+            "For group numbers less than 10, you should append a leading 0 to your group number to match the pattern pattern working_group_XX",
+        )
+        name_is_ok = False
+    elif expected_group_number is not None:
+        if group_id != expected_group_number:
+            print_warning(
+                "Submission name and group number do not match.",
+                f"Submission is named {archive_name} but your group number is {expected_group_number}.",
+            )
+            name_is_ok = False
+        elif verbose:
+            print_to_console(
+                f"Group number {expected_group_number} matches submission folder name."
+            )
+    elif verbose:
+        print_to_console(
+            f"Submission folder name is valid.",
+            f"NOTE: your group number was inferred as {group_id}, please check this is the case.",
+        )
+
+    return name_is_ok
+
+
 def check_submission(
     A: Assignment, archive_location: Path = None, ignore_extra_files: bool = False
 ) -> None:
@@ -70,7 +128,15 @@ def check_submission(
     not_found, not_expected = A.search_for_missing_files()
     if not_found:
         print_error("The following files are missing from your submission:", *not_found)
-    if not_expected and not ignore_extra_files:
+    if A.group_assignment and (not_expected and not ignore_extra_files):
+        # In the group assignment, there is more freedom, so phrase the unexpected files a bit more gently.
+        print_warning(
+            "The following files were included in your submission.",
+            "Please check that you expect them to be there:",
+            *not_expected,
+        )
+    if (not A.group_assignment) and (not_expected and not ignore_extra_files):
+        # In individual coursework, structure is more strict. Phrase extra files message a bit more harshly.
         print_warning(
             "Unexpected files in submission.",
             "The following files were found in your submission, but were not expected. This might be intentional (EG you have additional data files for your tests), but please double check the list below:",

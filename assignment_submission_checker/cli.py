@@ -3,11 +3,9 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .checker import check_archive_name, check_submission
+from .checker import check_archive_name, check_archive_name_group, check_submission
 from .printing import print_error, print_to_console
-from .static import COMP0233_2324_A1
-
-CURRENT_ASSIGNMENT = COMP0233_2324_A1
+from .static import COMP0233_2324_A2 as CURRENT_ASSIGNMENT
 
 DESCRIPTION = (
     f"A command-line tool to validate the format of your submission for assignment.\n"
@@ -42,7 +40,7 @@ def cli():
         "--check-cnumber",
         type=str,
         default=None,
-        help="When checking the name of the submission file, additionally check that the submission name matches the candidate number provided. If not provided, the program always will still check that the submission name is an 8-digit number.",
+        help="When checking the name of the submission file, additionally check that the submission name matches the candidate/group number provided. If not provided, the program always will still check that the submission name is in a valid format.",
     )
 
     args = parser.parse_args()
@@ -56,7 +54,11 @@ def cli():
 
     if args.submission is not None:
         try:
-            check_archive_name(args.submission, expected_candidate_number=args.check_cnumber)
+            if CURRENT_ASSIGNMENT.group_assignment:
+                check_archive_name_group(args.submission, expected_group_number=args.check_cnumber)
+            else:
+                check_archive_name(args.submission, expected_candidate_number=args.check_cnumber)
+
             check_submission(
                 CURRENT_ASSIGNMENT,
                 archive_location=args.submission,
