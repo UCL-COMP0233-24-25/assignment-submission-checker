@@ -4,6 +4,13 @@ from pathlib import Path
 from typing import Callable
 
 
+class AssignmentCheckerError(Exception):
+    """
+    Allows us to define a custom exception type for when the assignment checker
+    encounters a genuine problem with the submission.
+    """
+
+
 def on_readonly_error(f: Callable[[Path], None], path: Path, exc_info) -> None:
     """
     Error handler for ``shutil.rmtree``.
