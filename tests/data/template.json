@@ -1,0 +1,36 @@
+{
+    "number": "01",
+    "year": 2024,
+    "structure": {
+        "variable-name": true,
+        "repo_name": {
+            "git-root": true,
+            "compulsory": [
+                "c1.py",
+                "c2.py"
+            ],
+            "optional": [
+                "notebook.ipynb",
+                "provided_code.py"
+            ],
+            "report": {
+                "compulsory": [
+                    "report.md",
+                    "plot.png"
+                ],
+                "optional": [
+                    "AIUsage.md",
+                    "Feedback.md"
+                ]
+            },
+            "data": {
+                "optional": [
+                    "data.csv"
+                ],
+                "data-file-types": [
+                    ".csv"
+                ]
+            }
+        }
+    }
+}
