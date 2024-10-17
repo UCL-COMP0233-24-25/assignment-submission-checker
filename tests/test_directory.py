@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Optional, Set
 
-import git
 import pytest
 
 from assignment_submission_checker.directory import Directory
-from assignment_submission_checker.git_utils import switch_if_safe
 from assignment_submission_checker.utils import AssignmentCheckerError
 
 
@@ -127,7 +125,6 @@ def test_check_files(
     assert unexpected == expected_unexpected, "Not all unexpected files were identified."
 
 
-# TSTK REFACTOR THE GIT SETUP STUFF INTO CONFTEST!!
 @pytest.mark.parametrize(
     ["file_structure", "git_repo_loc", "git_commit_work_to", "git_switch_to", "expected_error"],
     [
@@ -167,7 +164,7 @@ def test_check_files(
     indirect=["file_structure"],
 )
 def test_check_directory(
-    setup_folder_structure,
+    setup_submission_folder,
     tmp_path: Path,
     test_dir_structure: Directory,
     git_repo_loc: Optional[str],
@@ -175,33 +172,6 @@ def test_check_directory(
     git_switch_to: Optional[str],
     expected_error: Optional[Exception],
 ) -> None:
-    if git_repo_loc is not None:
-        # Setup the git repo in the target folder
-        if git_commit_work_to is None:
-            git_commit_work_to = "main"
-        if git_switch_to is None:
-            git_switch_to = "main"
-
-        repo_dir = tmp_path / git_repo_loc
-        if not repo_dir.is_dir():
-            raise RuntimeError("Target git folder needs to exist!")
-
-        # Create initial commit, then revert it to not affect the test structure
-        repo = git.Repo.init(repo_dir)
-        if repo.active_branch.name != "main":
-            repo.git.branch("-m", "main")
-        repo.git.commit("--allow-empty", "-m", "Initial commit to main")
-
-        # Switch to the branch that the work needs to be committed to
-        switch_if_safe(repo, git_commit_work_to, create=True)
-
-        # Commit all work to this branch
-        repo.git.add(".")
-        repo.git.commit("-m", "Commit all work.")
-
-        # Switch to the branch that we want the repo left on
-        switch_if_safe(repo, git_switch_to, True)
-
     if expected_error is not None:
         with pytest.raises(expected_error):
             test_dir_structure.check_against_directory(tmp_path)
