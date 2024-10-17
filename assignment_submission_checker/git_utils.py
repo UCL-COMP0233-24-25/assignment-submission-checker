@@ -43,6 +43,23 @@ def is_git_repo(git_root_dir: Path) -> bool:
     return True
 
 
+def switch_if_safe(repo: git.Repo, to_branch: str, create: bool = False) -> None:
+    """
+    Switch to the given reference using git switch.
+
+    If the reference doesn't exist, passing the "create" flag will create the branch and switch to it.
+    Otherwise, an error will be raised via reporting the invalid reference.
+    """
+    if repo.active_branch.name == to_branch:
+        return
+    elif to_branch in [ref.name for ref in repo.references]:
+        repo.git.switch(to_branch)
+    elif create:
+        repo.git.switch("-c", to_branch)
+    else:
+        raise RuntimeError(f"Reference {to_branch} not in repository references.")
+
+
 def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> None:
     """
     Switches the main branch in the repo, if this is possible.
