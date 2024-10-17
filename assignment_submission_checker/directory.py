@@ -139,6 +139,29 @@ class Directory:
     def __iter__(self) -> Iterator[Directory]:
         return self.traverse()
 
+    def __eq__(self, other: Directory) -> bool:
+        """
+        Directories are equal if they specify the same files,
+        and contain the same subdirectories.
+        """
+        if not isinstance(other, Directory):
+            return False
+        # The two instances, at top level, are identical.
+        truth_value = (
+            (self.name == other.name or self.variable_name == other.variable_name)
+            and self.git_root == other.git_root
+            and set(self.compulsory) == set(other.compulsory)
+            and set(self.data_file_patterns) == set(other.data_file_patterns)
+            and set(self.optional) == set(other.optional)
+        )
+        # The subdirectories that each contains are equal.
+        if len(self.subdirs) != len(other.subdirs):
+            return False
+        else:
+            for my_subdir, their_subdir in zip(sorted(self.subdirs), sorted(other.subdirs)):
+                truth_value = truth_value and (my_subdir == their_subdir)
+        return truth_value
+
     def __le__(self, other: Directory) -> bool:
         return self.name <= other.name
 
