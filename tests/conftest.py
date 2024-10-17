@@ -97,6 +97,7 @@ def setup_folder_structure(tmp_path: Path, file_structure: Dict[str, str]):
 
 @pytest.fixture
 def setup_submission_folder(
+    setup_folder_structure,
     tmp_path: Path,
     git_repo_loc: Optional[str],
     git_commit_work_to: Optional[str],

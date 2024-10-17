@@ -22,9 +22,9 @@ YEAR_KEY = "year"
 
 class Assignment:
 
-    _git_branch_to_mark: str
-
     _archive_format: str = ".tar.gz"
+
+    _git_branch_to_mark: str
     assignment_id: str
     directory_structure: Directory
     git_repo_path: Path
@@ -57,6 +57,29 @@ class Assignment:
             return self._git_branch_to_mark
         else:
             return "main"
+
+    @classmethod
+    def extract_to(cls, target_archive: Path, tmp_dir: Path) -> None:
+        if isinstance(target_archive, str):
+            target_archive = Path(target_archive)
+
+        if target_archive.suffixes:
+            archive_extension = "".join(target_archive.suffixes)
+        else:
+            warn(
+                f"Could not infer archive format from path: {target_archive}. Treating as {cls.expected_archive_format}."
+            )
+            archive_extension = cls.expected_archive_format
+
+        try:
+            if archive_extension == ".tar.gz":
+                tarfile.open(target_archive).extractall(path=tmp_dir)
+            elif archive_extension == ".zip":
+                zipfile.ZipFile(target_archive).extractall(path=tmp_dir)
+        except Exception as e:
+            raise AssignmentCheckerError(
+                f"Could not extract the file {target_archive} as a {archive_extension} file, encountered the following error:\n\t{str(e)}.\nMake sure you have compressed your assignment using the correct compression tool (tar/zip) and have provided the correct path to your submission file."
+            )
 
     @classmethod
     def from_json(cls, file: Path) -> Assignment:
@@ -160,22 +183,3 @@ class Assignment:
             shutil.rmtree(unpacking_directory, onerror=on_readonly_error)
 
         return raised_error if raised_error is not None else output_from_wrapped_fn
-
-    def extract_to(self, target_archive: Path, tmp_dir: Path) -> None:
-        if target_archive.suffixes:
-            archive_extension = "".join(target_archive.suffixes)
-        else:
-            warn(
-                f"Could not infer archive format from path: {target_archive}. Treating as {self.expected_archive_format}."
-            )
-            archive_extension = self.expected_archive_format
-
-        try:
-            if archive_extension == ".tar.gz":
-                tarfile.open(target_archive).extractall(path=tmp_dir)
-            elif archive_extension == ".zip":
-                zipfile.ZipFile(target_archive).extractall(path=tmp_dir)
-        except Exception as e:
-            raise AssignmentCheckerError(
-                f"Could not extract the file {target_archive} as a {archive_extension} file, encountered the following error:\n\t{str(e)}.\nMake sure you have compressed your assignment using the correct compression tool (tar/zip) and have provided the correct path to your submission file."
-            )
