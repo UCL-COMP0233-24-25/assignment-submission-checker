@@ -3,7 +3,7 @@ from __future__ import annotations
 import fnmatch
 import os
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterator, List, Optional, TypeAlias
+from typing import Any, Dict, Generator, Iterator, List, Optional, Set, Tuple, TypeAlias
 from warnings import warn
 
 import git
@@ -276,14 +276,14 @@ class Directory:
                 "Only the submission root can have a variable name."
             )
 
-    def check_files(self, directory: Path) -> List[str]:
+    def check_files(self, directory: Path) -> Tuple[Set[str], Set[str]]:
         """
         Check the files that are present in the directory, returning:
 
         1. A list of compulsory files that are missing.
         2. A list of files that were not expected to be found.
         """
-        files = set(f for f in os.listdir(directory) if os.path.isfile(f))
+        files = set(f for f in os.listdir(directory) if os.path.isfile(directory / f))
 
         missing_compulsory = set(self.compulsory) - files
 

@@ -28,7 +28,7 @@
                     "data.csv"
                 ],
                 "data-file-types": [
-                    ".csv"
+                    "*.csv"
                 ]
             }
         }
