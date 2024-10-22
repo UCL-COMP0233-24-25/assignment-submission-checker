@@ -55,6 +55,94 @@ def test_traverse(test_dir_structure: Directory) -> None:
         assert expected_name == dir.name, "Out-of-order-iteration through file structure!"
 
 
+@pytest.mark.parametrize(
+    [
+        "name",
+        "directory_name",
+        "var_pattern",
+        "do_not_change_name",
+        "expected_result",
+        "expected_name",
+    ],
+    [
+        pytest.param(
+            "Foobar",
+            "Foobar",
+            None,
+            None,
+            True,
+            None,
+            id="Non-variable, match",
+        ),
+        pytest.param(
+            "Foobar",
+            "Flibble",
+            None,
+            None,
+            False,
+            "Foobar",
+            id="Non-variable, no match",
+        ),
+        pytest.param(
+            "",
+            "F00bar",
+            "F??b*",
+            None,
+            True,
+            None,
+            id="Variable, match, set",
+        ),
+        pytest.param(
+            "non-changing-name",
+            "F00bar",
+            "F??b*",
+            True,
+            True,
+            "non-changing-name",
+            id="Variable, match, not set",
+        ),
+        pytest.param(
+            "",
+            "F00bar",
+            "Fl?bb*",
+            None,
+            False,
+            "",
+            id="Variable, no match",
+        ),
+    ],
+)
+def test_check_name(
+    name: str,
+    directory_name: str,
+    var_pattern: Optional[str],
+    do_not_change_name: bool,
+    expected_result: bool,
+    expected_name: Optional[str],
+) -> None:
+    """
+    Tests the Directory.check_name method.
+
+    expected_name will be set to the directory_name if not provided.
+    """
+    dir_dict = {"variable-name": var_pattern} if var_pattern is not None else {}
+    if expected_name is None:
+        expected_name = directory_name
+
+    directory = Directory(name, dir_dict, None)
+
+    result = (
+        directory.check_name(directory_name, do_not_set_name=do_not_change_name)
+        if do_not_change_name is not None
+        else directory.check_name(directory_name)
+    )
+
+    assert result == expected_result, "Result of check_name does not match expected."
+    assert (
+        directory.name == expected_name
+    ), "Directory's name has not been set to the expected value."
+
+
 ### Need to check compare against file structures...
 @pytest.mark.parametrize(
     ["file_structure", "folder_to_check", "expected_missing", "expected_unexpected"],
