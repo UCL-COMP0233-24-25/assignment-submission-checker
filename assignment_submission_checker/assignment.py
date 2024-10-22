@@ -3,9 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import tarfile
 import tempfile
-import zipfile
 from pathlib import Path
 from typing import Any, Optional
 from warnings import warn
@@ -22,8 +20,6 @@ YEAR_KEY = "year"
 
 class Assignment:
 
-    _archive_format: str = ".tar.gz"
-
     _git_branch_to_mark: str
     assignment_id: str
     directory_structure: Directory
@@ -36,22 +32,6 @@ class Assignment:
         return f"{self.year}-{self.year+1}"
 
     @property
-    def expected_archive_format(self) -> str:
-        """
-        The format of the submission archive that this assignment expects to receive.
-
-        If the format of the submission archive cannot be inferred from the name of the archive itself,
-        then the assignment will treat it as this format.
-        """
-        return self._archive_format
-
-    @expected_archive_format.setter
-    def expected_archive_format(self, fmt: str) -> None:
-        if fmt not in [".tar.gz", ".zip"]:
-            raise ValueError(f"Extraction of {fmt} archives is not supported by this tool.")
-        self._archive_format = fmt
-
-    @property
     def git_branch_to_mark(self) -> str:
         if self._git_branch_to_mark is not None:
             return self._git_branch_to_mark
@@ -59,26 +39,21 @@ class Assignment:
             return "main"
 
     @classmethod
-    def extract_to(cls, target_archive: Path, tmp_dir: Path) -> None:
-        if isinstance(target_archive, str):
-            target_archive = Path(target_archive)
+    def copy_to_tmp_location(cls, target_directory: Path, tmp_dir: Path) -> None:
+        """
+        Should return the path to the copied directory!
+        """
+        if isinstance(target_directory, str):
+            target_directory = Path(target_directory)
 
-        if target_archive.suffixes:
-            archive_extension = "".join(target_archive.suffixes)
-        else:
-            warn(
-                f"Could not infer archive format from path: {target_archive}. Treating as {cls.expected_archive_format}."
-            )
-            archive_extension = cls.expected_archive_format
+        if not target_directory.is_dir():
+            raise AssignmentCheckerError(f"Target {target_directory} is not a directory.")
 
         try:
-            if archive_extension == ".tar.gz":
-                tarfile.open(target_archive).extractall(path=tmp_dir)
-            elif archive_extension == ".zip":
-                zipfile.ZipFile(target_archive).extractall(path=tmp_dir)
+            shutil.copytree(target_directory, tmp_dir, symlinks=False, dirs_exist_ok=False)
         except Exception as e:
             raise AssignmentCheckerError(
-                f"Could not extract the file {target_archive} as a {archive_extension} file, encountered the following error:\n\t{str(e)}.\nMake sure you have compressed your assignment using the correct compression tool (tar/zip) and have provided the correct path to your submission file."
+                f"Could not copy the submission directory {target_directory} to a temporary location, encountered the following error:\n\t{str(e)}."
             )
 
     @classmethod
@@ -95,7 +70,6 @@ class Assignment:
 
     def __init__(
         self,
-        archive_format: str = ".tar.gz",
         git_branch_to_mark: Optional[str] = None,
         number: int | str = 1,
         structure: DirectoryDict = {},
@@ -103,7 +77,6 @@ class Assignment:
     ) -> None:
         self._git_branch_to_mark = git_branch_to_mark
 
-        self.expected_archive_format = archive_format
         self.assignment_id = number if isinstance(number, str) else str(number).zfill(2)
         self.directory_structure = Directory("root", structure)
         self.year = year
@@ -117,7 +90,7 @@ class Assignment:
             )
         self.git_repo = git_repos[0].path_from_root
 
-    def _inner_check_submission(self, target_archive: Path, tmp_dir: Path) -> None:
+    def _inner_check_submission(self, submission_dir: Path, tmp_dir: Path) -> None:
         """
         Wrapped steps for the check_submission method.
 
@@ -125,47 +98,47 @@ class Assignment:
         outer wrapping method will take care of this.
         We should also be able to edit the temporary directory's contents as we see fit.
         """
-        # First, extract the target_archive to the temporary directory.
-        self.extract_to(target_archive=target_archive, tmp_dir=tmp_dir)
+        # REWORK ME!
+        # self.copy_to_tmp_location(target_directory=submission_dir, tmp_dir=tmp_dir)
 
-        # Assert that a single folder has now been placed into the temporary directory
-        path_objs = os.listdir(tmp_dir)
-        file_objs = [f for f in path_objs if os.path.isfile(f)]
-        dir_objs = [Path(f) for f in path_objs if os.path.isdir(f)]
+        # # Assert that a single folder has now been placed into the temporary directory
+        # path_objs = os.listdir(tmp_dir)
+        # file_objs = [f for f in path_objs if os.path.isfile(f)]
+        # dir_objs = [Path(f) for f in path_objs if os.path.isdir(f)]
 
-        if file_objs:
-            warn(
-                "The following files were present at top-level after extracting your submission:\n"
-                "".join(f"\t{f}\n" for f in file_objs)
-            )
+        # if file_objs:
+        #     warn(
+        #         "The following files were present at top-level after extracting your submission:\n"
+        #         "".join(f"\t{f}\n" for f in file_objs)
+        #     )
 
-        submission_dir = None
-        if not dir_objs:
-            raise AssignmentCheckerError("FATAL: No directory produced when extracting archive.")
-        else:
-            if len(dir_objs) == 1:
-                submission_dir = tmp_dir / dir_objs[0]
-            else:
-                warn(
-                    f"Detected multiple top-level directories when extracting your archive: {dir_objs}"
-                )
-                # Check if the extra directories are hidden, which could indicate metadata files from OSes
-                hidden_dirs = [d for d in dir_objs if str(d).startswith(".")]
-                non_hidden_dirs = list(set(dir_objs) - set(hidden_dirs))
-                if len(non_hidden_dirs) == 1:
-                    submission_dir = tmp_dir / non_hidden_dirs[0]
-                else:
-                    raise AssignmentCheckerError(
-                        "You have multiple top-level directories within your submission folder."
-                    )
+        # submission_dir = None
+        # if not dir_objs:
+        #     raise AssignmentCheckerError("FATAL: No directory produced when extracting archive.")
+        # else:
+        #     if len(dir_objs) == 1:
+        #         submission_dir = tmp_dir / dir_objs[0]
+        #     else:
+        #         warn(
+        #             f"Detected multiple top-level directories when extracting your archive: {dir_objs}"
+        #         )
+        #         # Check if the extra directories are hidden, which could indicate metadata files from OSes
+        #         hidden_dirs = [d for d in dir_objs if str(d).startswith(".")]
+        #         non_hidden_dirs = list(set(dir_objs) - set(hidden_dirs))
+        #         if len(non_hidden_dirs) == 1:
+        #             submission_dir = tmp_dir / non_hidden_dirs[0]
+        #         else:
+        #             raise AssignmentCheckerError(
+        #                 "You have multiple top-level directories within your submission folder."
+        #             )
 
-        # Start the checking process
-        if submission_dir is not None:
-            self.directory_structure.check_against_directory(submission_dir)
-        else:
-            raise
+        # # Start the checking process
+        # if submission_dir is not None:
+        #     self.directory_structure.check_against_directory(submission_dir)
+        # else:
+        #     raise
 
-    def check_submission(self, target_archive: Path) -> AssignmentCheckerError | Any:
+    def check_submission(self, submission_dir: Path) -> AssignmentCheckerError | Any:
         """
         Check the archive provided matches the assignment specifications that have been read in.
         """
@@ -173,8 +146,8 @@ class Assignment:
         raised_error = None
 
         try:
-            output_from_wrapped_fn = self.check_submission(
-                target_archive=target_archive,
+            output_from_wrapped_fn = self._inner_check_submission(
+                submission_dir=submission_dir,
                 tmp_dir=unpacking_directory,
             )
             shutil.rmtree(unpacking_directory, onerror=on_readonly_error)
