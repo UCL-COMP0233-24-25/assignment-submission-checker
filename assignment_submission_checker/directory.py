@@ -34,10 +34,10 @@ class Directory:
     data_file_patterns: List[str]
     git_root: bool = False
     name: str
+    name_pattern: str
     optional: List[str]
     parent: Directory
     subdirs: List[Directory]
-    variable_name: bool
 
     @property
     def is_data_dir(self) -> bool:
@@ -67,6 +67,13 @@ class Directory:
             return Path(".")
         else:
             return self.parent.path_from_root / self.name
+
+    @property
+    def variable_name(self) -> bool:
+        """
+        Whether this instance needs to match a name pattern.
+        """
+        return bool(self.name_pattern)
 
     def __init__(
         self, name: str, directory_structure: DirectoryDict = {}, parent: Optional[Directory] = None
@@ -99,10 +106,10 @@ class Directory:
         )
 
         # Record if this directory may have a user-defined name
-        self.variable_name = (
+        self.name_pattern = (
             directory_structure[VARIABLE_NAME_KEY]
             if VARIABLE_NAME_KEY in directory_structure
-            else False
+            else ""
         )
 
         # Now, use recursion to create the list of directories that this directory contains.
@@ -148,7 +155,7 @@ class Directory:
             return False
         # The two instances, at top level, are identical.
         truth_value = (
-            (self.name == other.name or self.variable_name == other.variable_name)
+            (self.name == other.name or self.name_pattern == other.name_pattern)
             and self.git_root == other.git_root
             and set(self.compulsory) == set(other.compulsory)
             and set(self.data_file_patterns) == set(other.data_file_patterns)
@@ -224,7 +231,7 @@ class Directory:
         if not directory.is_dir():
             raise RuntimeError(f"Is not a directory: {directory}")
 
-        if self.variable_name:
+        if self.name_pattern:
             # Infer the name that the student has given to this directory.
             # This typically occurs when a student is asked to use their candidate number
             # for a directory, for example.
@@ -281,23 +288,13 @@ class Directory:
             )
 
         # Delegate further investigation down into subdirectories.
-        for subdir in [s for s in self.subdirs if not s.variable_name]:
+        for subdir in self.subdirs:
             path_to_subdir = directory / subdir.name
             if not (subdir.is_optional or path_to_subdir.is_dir()):
                 raise AssignmentCheckerError(
                     f"Expected subdirectory {subdir} to be present in {self.name}, but it is not."
                 )
             subdir.check_against_directory(path_to_subdir)
-        # If this folder contains subdirectories that have variable names,
-        # we will need special treatment to try and match these to the remaining
-        # directories we have not used in the above loop.
-        # For now, this is left as an immediate error raise, since I don't have time to
-        # implement it, and in practice this should never occur (only the root folder should have a variable name).
-        for subdir in [s for s in self.subdirs if s.variable_name]:
-            raise RuntimeError(
-                "The assignment checker cannot handle subdirectories that have variable names. "
-                "Only the submission root can have a variable name."
-            )
 
     def check_files(self, directory: Path) -> Tuple[Set[str], Set[str]]:
         """
@@ -316,3 +313,27 @@ class Directory:
         unexpected = files - set(self.compulsory) - set(self.optional) - data_files
 
         return missing_compulsory, unexpected
+
+    def check_name(self, directory_name: str, do_not_set_name: bool = False) -> bool:
+        """
+        Check that the directory name given is compatible with this instance.
+
+        If self.variable_name is False, the directory_name must match self.name.
+        If self.variable_name is True:
+            - If self.variable_name_match is None, take the name provided as a match.
+            - Otherwise, the directory_name must match the shell expression given in self.variable_name_match.
+
+        In the case of a variable name and a matching directory name, the self.name
+        property will be set to the matched value.
+        This can be suppressed using the do_not_set_name input.
+        """
+        if not self.variable_name:
+            return directory_name == self.name
+        else:
+            # Must match shell expression.
+            if fnmatch.fnmatch(directory_name, self.name_pattern):
+                if not do_not_set_name:
+                    self.name = directory_name
+                return True
+            else:
+                return False
