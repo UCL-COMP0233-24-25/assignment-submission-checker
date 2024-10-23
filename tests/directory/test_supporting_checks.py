@@ -266,12 +266,14 @@ def test_check_git_repo(
         "dir_name",
         "expected_missing",
         "expected_unexpected",
+        "expected_optional",
         "subdir_to_check",
     ],
     [
         pytest.param(
             "template_dir_dict",
             "top-level-folder/my-git-submission",
+            [],
             [],
             [],
             "git-root-dir",
@@ -282,6 +284,7 @@ def test_check_git_repo(
             "top-level-folder/my-git-submission",
             ["c2.py"],
             [],
+            [],
             "git-root-dir",
             id="Missing compulsory file, (my-git-submission)",
         ),
@@ -290,6 +293,7 @@ def test_check_git_repo(
             "top-level-folder/my-git-submission/report",
             [],
             [],
+            ["AIUsage.md"],
             "git-root-dir/report",
             id="Good file structure, (my-git-submission/report)",
         ),
@@ -298,6 +302,7 @@ def test_check_git_repo(
             "top-level-folder/my-git-submission/report",
             [],
             ["extra_image.png"],
+            [],
             "git-root-dir/report",
             id="Unexpected file, (my-git-submission/report)",
         ),
@@ -306,6 +311,7 @@ def test_check_git_repo(
             "top-level-folder/my-git-submission/data",
             [],
             [],
+            ["custom_data.csv"],
             "git-root-dir/data",
             id="Good file structure, (my-git-submission/data)",
         ),
@@ -314,6 +320,7 @@ def test_check_git_repo(
             "top-level-folder/my-git-submission/data",
             [],
             ["wrong_format.json"],
+            ["good_format.csv"],
             "git-root-dir/data",
             id="Unexpected .json file, my-git-submission/data",
         ),
@@ -326,6 +333,7 @@ def test_check_files(
     dir_name: str,
     expected_missing: Set[str],
     expected_unexpected: Set[str],
+    expected_optional: Set[str],
     subdir_to_check: str,
     template_directory: Directory,
 ) -> None:
@@ -333,8 +341,13 @@ def test_check_files(
         expected_missing = set(expected_missing)
     if isinstance(expected_unexpected, list):
         expected_unexpected = set(expected_unexpected)
+    if isinstance(expected_optional, list):
+        expected_optional = set(expected_optional)
 
-    missing, unexpected = template_directory[subdir_to_check].check_files(tmp_path / dir_name)
+    missing, unexpected, optional = template_directory[subdir_to_check].check_files(
+        tmp_path / dir_name
+    )
 
     assert missing == expected_missing, "Not all missing files were flagged."
     assert unexpected == expected_unexpected, "Not all unexpected files were identified."
+    assert optional == expected_optional, "Optional files were incorrectly identified."
