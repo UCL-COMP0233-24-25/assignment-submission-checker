@@ -314,48 +314,36 @@ class Directory:
         if isinstance(error, AssignmentCheckerError):
             return error, WARNING, INFORMATION
 
-        # Check the files and subdirectories that this folder contains.
-        # TSTK FIXME Allow for information about optional files that are identified
-        missing_compulsory, unexpected = self.check_files(directory)
+        # Check the files that this folder contains.
+        missing_compulsory, unexpected, optional = self.check_files(directory)
         if missing_compulsory:
             WARNING.append(
                 f"Your submission is missing the following compulsory files (not found in {directory}):\n"
                 "".join(f"\t{f}\n" for f in missing_compulsory)
             )
-        elif unexpected:
+        if unexpected:
             WARNING.append(
                 f"The following files were found in {directory}, but were not expected:\n"
                 "".join(f"\t{f}\n" for f in unexpected)
             )
+        if optional:
+            INFORMATION.append(
+                f"Found the following optional files inside {directory}:\n"
+                "".join(f"\t{f}\n" for f in optional)
+            )
 
         # Delegate further investigation down into subdirectories.
-        # First, handle non-variable-named directories
+        # Handle non-variable-named directories.
         for subdir in self.fixed_name_subdirs:
-            path_to_subdir = directory / subdir.name
-            if not path_to_subdir.is_dir():
-                if subdir.is_optional:
-                    INFORMATION.append(
-                        f"Optional subfolder {subdir.name} of {self.name} not found."
-                    )
-                else:
-                    return (
-                        AssignmentCheckerError(
-                            f"Expected subdirectory {subdir} to be present in {self.name}, but it is not."
-                        ),
-                        WARNING,
-                        INFORMATION,
-                    )
-
-            # Delegate checking to subdirectory
-            FATAL, s_warning, s_information = subdir.check_against_directory(
-                path_to_subdir, do_not_set_name=do_not_set_name
+            FATAL, s_warning, s_information = self.investigate_subdir(
+                directory / subdir.name, subdir, do_not_set_name=do_not_set_name
             )
             WARNING.extend(s_warning)
             INFORMATION.extend(s_information)
             if FATAL is not None:
                 return FATAL, WARNING, INFORMATION
 
-        # Now handle the remaining directories, that have variable names
+        # Determine which folders on the filesystem represent the subdirectories that have variable names.
         matches, not_matched = self.match_variable_name_subdirs(directory)
         not_matched_and_compulsory = [s for s in not_matched if not s.is_optional]
         not_matched_and_optional = [s for s in not_matched if s.is_optional]
@@ -379,18 +367,28 @@ class Directory:
                 f"The following optional folder patterns were not found in {self.name}:\n\t"
                 + ", ".join(s.name_pattern for s in not_matched_and_optional)
             )
+        # Then, actually go into these directories to continue the checking and logging.
+        for path, subdir in matches.items():
+            FATAL, s_warning, s_information = self.investigate_subdir(
+                directory / path, subdir, do_not_set_name=do_not_set_name
+            )
+            WARNING.extend(s_warning)
+            INFORMATION.extend(s_information)
+            if FATAL is not None:
+                return FATAL, WARNING, INFORMATION
 
         # Note that if we get to here, FATAL should be None.
         # But including this return here in case future developments add additional checks between
         # the variable-named directories and the end of the method.
         return None, WARNING, INFORMATION
 
-    def check_files(self, directory: Path) -> Tuple[Set[str], Set[str]]:
+    def check_files(self, directory: Path) -> Tuple[Set[str], Set[str], Set[str]]:
         """
         Check the files that are present in the directory, returning:
 
         1. A list of compulsory files that are missing.
         2. A list of files that were not expected to be found.
+        3. A list of optional files that were found.
         """
         files = set(f for f in os.listdir(directory) if os.path.isfile(directory / f))
 
@@ -401,7 +399,9 @@ class Directory:
         )
         unexpected = files - set(self.compulsory) - set(self.optional) - data_files
 
-        return missing_compulsory, unexpected
+        optional = files - unexpected - set(self.compulsory)
+
+        return missing_compulsory, unexpected, optional
 
     def check_git_repo(
         self, directory: Path, *allowable_other_branches: str
@@ -500,6 +500,45 @@ class Directory:
                 return True
             else:
                 return False
+
+    def investigate_subdir(
+        self, path_to_subdir: Path, subdir: Directory, do_not_set_name: bool = False
+    ) -> Tuple[AssignmentCheckerError | None, List[str], List[str]]:
+        """
+        Essentially wraps check_directory when called on a subdirectory on the instance.
+        This has utility within check_directory() as we can refactor out the body of two `for` loops
+        into this function;
+        - When we investigate subdirectories with fixed names,
+        - When we investigate subdirectories with variable names,
+        after having matched these to folders on the filesystem.
+
+        Note that `path_to_subdir` should point to the folder that is to be compared to `subdir`, unlike
+        its counterpart in `check_directories` where `directory` points to the folder that is being compared to `self`.
+
+        The returned values, and remaining arguments, are identical to those of `check_directory`.
+        """
+        warning = []
+        information = []
+
+        if not path_to_subdir.is_dir():
+            if subdir.is_optional:
+                information.append(f"Optional subfolder {subdir.name} of {self.name} not found.")
+            else:
+                return (
+                    AssignmentCheckerError(
+                        f"Expected subdirectory {subdir} to be present in {self.name}, but it is not."
+                    ),
+                    warning,
+                    information,
+                )
+
+        # Delegate checking to subdirectory
+        FATAL, s_warning, s_information = subdir.check_against_directory(
+            path_to_subdir, do_not_set_name=do_not_set_name
+        )
+        warning.extend(s_warning)
+        information.extend(s_information)
+        return FATAL, warning, information
 
     def match_variable_name_subdirs(
         self, directory: Path
