@@ -2,8 +2,9 @@
     "number": "01",
     "year": 2024,
     "structure": {
-        "variable-name": "*_*_submission",
-        "repo_name": {
+        "variable-name": "*",
+        "git-root-dir": {
+            "variable-name": "*-*-submission",
             "git-root": true,
             "compulsory": [
                 "c1.py",
