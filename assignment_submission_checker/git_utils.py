@@ -1,13 +1,15 @@
+import os
 from pathlib import Path
 from typing import List, Tuple
-from warnings import warn
 
 import git
 
 from .utils import AssignmentCheckerError
 
 
-def is_clean(repo: git.Repo, boolean_output: bool = False) -> Tuple[List[str], List[str]] | bool:
+def is_clean(
+    repo: git.Repo, boolean_output: bool = False
+) -> Tuple[List[str], List[str], List[str]] | bool:
     """
     Determine if the repository has a clean working tree.
 
@@ -19,15 +21,17 @@ def is_clean(repo: git.Repo, boolean_output: bool = False) -> Tuple[List[str], L
     is clean/unclean.
     """
     untracked_files = []
-    changed_files = []
+    unstaged_files = []
+    uncommitted_files = []
 
     repo_clean = not repo.is_dirty(untracked_files=True)
 
     if not repo_clean:
         untracked_files = repo.untracked_files
-        changed_files = [item.a_path for item in repo.index.diff(None)]
+        unstaged_files = [item.a_path for item in repo.index.diff(None)]
+        uncommitted_files = [item.a_path for item in repo.index.diff("HEAD")]
 
-    return untracked_files, changed_files if not boolean_output else repo_clean
+    return untracked_files, unstaged_files, uncommitted_files if not boolean_output else repo_clean
 
 
 def is_git_repo(git_root_dir: Path) -> bool:
@@ -41,6 +45,33 @@ def is_git_repo(git_root_dir: Path) -> bool:
     except Exception:
         return False
     return True
+
+
+def locate_repo_in_tree(search_root: Path) -> Path:
+    """
+    Given a root folder to search from, recurse through the directory tree from this location and return the path to
+    the first git repository that is found.
+
+    If no repository is found, the return value is None.
+    """
+    search_root = Path(search_root)
+
+    try:
+        r = git.Repo(search_root)
+    except git.InvalidGitRepositoryError:
+        r = None
+
+    if r is not None:
+        r.close()
+        return search_root
+    else:
+        # This directory is not a valid git repository,
+        # start recursing.
+        for dir in [search_root / p for p in os.listdir(search_root)]:
+            if dir.is_dir():
+                answer = locate_repo_in_tree(dir)
+            if answer is not None:
+                return answer
 
 
 def switch_if_safe(repo: git.Repo, to_branch: str, create: bool = False) -> None:
@@ -60,7 +91,7 @@ def switch_if_safe(repo: git.Repo, to_branch: str, create: bool = False) -> None
         raise RuntimeError(f"Reference {to_branch} not in repository references.")
 
 
-def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> None:
+def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> str:
     """
     Switches the main branch in the repo, if this is possible.
 
@@ -68,27 +99,38 @@ def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> N
     allowable other names, in the order they are provided. It will switch to the first
     name that it finds a reference to.
 
+    The returned value will be a string that describes any non-fatal warnings that were encountered when trying to
+    switch the repository to the desired branch.
+    Specifically:
+    - If the repository was not already on the `main` branch.
+    - If the repository has no `main` branch, but did have a branch corresponding to
+    one of the `allowable_other_names`.
+
     Raises an AssignmentCheckerError if the branch cannot be switched to.
     """
     correct_ref = None
+    warning_text = ""
     if repo.active_branch.name == "main":
         return
     elif "main" in [r.name for r in repo.references]:
-        warn("Repository was not on the main branch, switching now...")
+        warning_text = "Repository was not on the main branch, switching now..."
         correct_ref = "main"
     else:
         # Attempt to switch to any of the other available references.
-        for ref in allowable_other_names:
-            if ref.name in repo.references:
-                warn(
-                    f"Repository does not have a main branch, but found {ref.name}, which is an acceptable alternative. Switching now..."
-                )
-                correct_ref = ref.name
+        for name in allowable_other_names:
+            if name in repo.references:
+                warning_text = f"Repository does not have a main branch, but found {name}, which is an acceptable alternative. Switching now..."
+                correct_ref = name
+                break
 
+    if correct_ref is None:
+        raise AssignmentCheckerError(
+            "Could not find 'main' branch, or any other allowable reference."
+        )
     try:
         repo.git.checkout(correct_ref)
     except Exception as e:
         raise AssignmentCheckerError(
             f"Could not checkout reference {correct_ref} in repository."
         ) from e
-    return
+    return warning_text

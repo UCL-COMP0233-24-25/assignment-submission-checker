@@ -1,16 +1,40 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, TypeAlias
+from typing import Any, Dict, Generator, List
 
 import git
 import pytest
 
-from assignment_submission_checker.assignment import Assignment
+# from assignment_submission_checker.assignment import Assignment
 from assignment_submission_checker.directory import Directory
-from assignment_submission_checker.git_utils import switch_if_safe
+from assignment_submission_checker.git_utils import locate_repo_in_tree, switch_if_safe
 
-JsonData: TypeAlias = Dict[str, Any]
+
+def make_nested_dirs(where: Path, dir_dict: Dict[str, List[str | Dict]]) -> None:
+    """
+    Creates the given folder structure at the path provided.
+
+    The dir_dict argument should be a dictionary that describes the file structure to create.
+    The keys should be strings, corresponding to directory names to create.
+    Values should be a list of either strings, or further dictionaries of the same format.
+    - Strings in the list will be interpreted as file names to be created.
+    - Dictionaries in the list will be interpreted as subdirectories to create.
+    - Providing an empty list as the value will create an empty directory.
+    """
+    for dir_name, dir_objs in dir_dict.items():
+        new_dir = where / dir_name
+        new_dir.mkdir(parents=False, exist_ok=True)
+
+        # Populate with files
+        for f_name in [name for name in dir_objs if isinstance(name, str)]:
+            with open(new_dir / f_name, "w") as f:
+                f.write("Placeholder content")
+
+        # Create subdirectories
+        for subdir in [subdir for subdir in dir_objs if isinstance(subdir, dict)]:
+            make_nested_dirs(new_dir, subdir)
+    return
 
 
 @pytest.fixture(scope="session")
@@ -19,124 +43,225 @@ def DATA_DIR() -> Path:
 
 
 @pytest.fixture
-def test_data_json(DATA_DIR) -> Path:
+def make_folder_structure(tmp_path: Path, request) -> Generator[None, Any, None]:
+    """
+    Creates the given folder structure in the temporary path.
+
+    request.param should be either:
+    - A dictionary compatible with the make_folder_structure function's dir_dict argument.
+    - A string that matches the name of a pytest fixture that returns a dictionary compatible
+    with the make_folder_structure function's dir_dict argument.
+    """
+    if isinstance(request.param, str):
+        dir_dict = request.getfixturevalue(request.param)
+    elif isinstance(request.param, dict):
+        dir_dict = request.param
+    else:
+        raise RuntimeError(
+            "Need a dictionary argument or a fixture name that generates a dictionary."
+        )
+    make_nested_dirs(where=tmp_path, dir_dict=dir_dict)
+    yield
+
+
+## template.json fixtures and derived objects
+
+
+@pytest.fixture
+def template_json(DATA_DIR) -> Path:
     return DATA_DIR / "template.json"
 
 
 @pytest.fixture
-def test_data_dict(test_data_json: Path) -> JsonData:
-    with open(test_data_json, "r") as f:
+def template_loaded_json(template_json: Path) -> Dict[str, Any]:
+    with open(template_json, "r") as f:
         data = json.load(f)
     return data
+
+
+@pytest.fixture
+def template_dir_dict() -> Dict[str, List[str | Dict]]:
+    """
+    A file structure that matches that in template.json.
+    """
+    return {
+        "top-level-folder": [
+            {
+                "my-git-submission": [
+                    "c1.py",
+                    "c2.py",
+                    {
+                        "report": [
+                            "report.md",
+                            "plot.png",
+                            "AIUsage.md",
+                        ],
+                        "data": [
+                            "custom_data.csv",
+                        ],
+                    },
+                ]
+            },
+        ],
+    }
+
+
+@pytest.fixture
+def bad_template_dir_dict() -> Dict[str, List[str | Dict]]:
+    """
+    A file structure that matches that in template.json, but:
+
+    - Is missing the compulsory my-git-submission/c2.py file,
+    - report/extra_image.png is an unexpected file,
+    - data/wrong_format.json is an unexpected file.
+    """
+    return {
+        "top-level-folder": [
+            {
+                "my-git-submission": [
+                    "c1.py",
+                    {
+                        "report": [
+                            "report.md",
+                            "plot.png",
+                            "extra_image.png",
+                        ],
+                        "data": [
+                            "good_format.csv",
+                            "wrong_format.json",
+                        ],
+                    },
+                ]
+            }
+        ]
+    }
+
+
+@pytest.fixture
+def template_directory(template_loaded_json: Dict[str, Any]) -> Directory:
+    """
+    Directory instance corresponding to the structure key in template.json.
+
+    Top-level folder has a variable name, which takes the name 'structure' until set.
+    """
+    return Directory("structure", template_loaded_json["structure"], parent=None)
 
 
 ## DIRECTORIES
 
 
 @pytest.fixture
-def test_dir_structure(test_data_dict: JsonData) -> Directory:
-    return Directory("root", test_data_dict["structure"], parent=None)
-
-
-@pytest.fixture
-def file_structure(request) -> Dict[str, str]:
-    """
-    Creates a file structure consistent with the template.json assignment definition.
-
-    If the request.param is True, then the file structure created will be incorrect in the
-    following ways:
-
-    - "repo_name/c2.py" will not be present, but is compulsory.
-    - "repo_name/report/wrong_image.pdf" will be present, but is not expected.
-    - "repo_name/data/wrong_format.json" will be present, but is not expected.
-    """
-    if request.param:
-        return {
-            "c1.py": "import json\n",
-            "report/report.md": "# My Report\n",
-            "report/plot.png": "funny_cat_gif",
-            "report/wrong_image.pdf": "content",
-            "report/AIUsage.md": "# AI Usage File\n",
-            "data/custom_data.csv": "forename,surname\nWill,Graham",
-            "data/wrong_format.json": "{'foo': 'bar'}",
-        }
-    else:
-        return {
-            "c1.py": "import json\n",
-            "c2.py": "from typing import Any\n",
-            "report/report.md": "# My Report\n",
-            "report/plot.png": "funny_cat_gif",
-            "report/AIUsage.md": "# AI Usage File\n",
-            "data/custom_data.csv": "forename,surname\nWill,Graham",
-        }
-
-
-@pytest.fixture
-def setup_folder_structure(tmp_path: Path, file_structure: Dict[str, str]):
-    """
-    A file structure that - besides a missing GIT repo - is compatible with
-    the template.json assignment structure defined in the tests/data folder.
-    """
-    repo_folder = tmp_path / "repo_name"
-    data_folder = repo_folder / "data"
-    report_folder = repo_folder / "report"
-
-    # Create folder structure
-    repo_folder.mkdir(parents=False, exist_ok=True)
-    data_folder.mkdir(parents=True, exist_ok=True)
-    report_folder.mkdir(parents=True, exist_ok=True)
-
-    # Populate with files
-    for file, content in file_structure.items():
-        with open(repo_folder / file, "w") as f:
-            f.write(content)
-
-    # Run test
-    yield
-
-
-@pytest.fixture
-def setup_submission_folder(
-    setup_folder_structure,
+def setup_folder_structure_with_git(
+    make_folder_structure,
     tmp_path: Path,
-    git_repo_loc: Optional[str],
-    git_commit_work_to: Optional[str],
-    git_switch_to: Optional[str],
-):
-    if git_repo_loc is not None:
-        # Setup the git repo in the target folder
-        if git_commit_work_to is None:
-            git_commit_work_to = "main"
-        if git_switch_to is None:
-            git_switch_to = "main"
+    request,
+) -> Generator[None, Any, None]:
+    """
+    Sets up the folder structure provided, potentially adding a git repository to the file structure.
 
-        repo_dir = tmp_path / git_repo_loc
-        if not repo_dir.is_dir():
-            raise RuntimeError("Target git folder needs to exist!")
+    request.param should be a dictionary that contains the following keys;
 
-        # Create initial commit, then revert it to not affect the test structure
-        repo = git.Repo.init(repo_dir)
-        if repo.active_branch.name != "main":
-            repo.git.branch("-m", "main")
-        repo.git.commit("--allow-empty", "-m", "Initial commit to main")
+    - 'checkout': The value of this key should be a string giving the name of the branch to checkout after
+    committing the files, leaving the repository on. Defaults to 'main' if not provided.
+    - 'commit': The value of this key should be a string giving the name of the branch to commit files
+    created in `make_folder_structure` to. Defaults to 'main' if not provided.
+    - 'rootdir': The value of this key should be a string or Path-like object that specifies the folder to
+    initialise the git repository in.
+    It will default to the top-level directory in `make_folder_structure` if not provided.
+    """
+    if isinstance(request.param, dict):
+        leave_repo_on_branch = request.param["checkout"] if "checkout" in request.param else None
+        commit_work_to_branch = request.param["commit"] if "commit" in request.param else "main"
+        make_git_root_at = request.param["rootdir"] if "rootdir" in request.param else "."
+    else:
+        commit_work_to_branch = "main"
+        leave_repo_on_branch = None
+        make_git_root_at = "."
 
-        # Switch to the branch that the work needs to be committed to
-        switch_if_safe(repo, git_commit_work_to, create=True)
+    repo_dir = tmp_path / make_git_root_at
+    if not repo_dir.is_dir():
+        raise RuntimeError("Target git folder needs to exist!")
 
-        # Commit all work to this branch
-        repo.git.add(".")
-        repo.git.commit("-m", "Commit all work.")
+    repo = git.Repo.init(repo_dir)
+    # Ensure that the branch we made with git init has the same name as
+    # the branch we want to commit to.
+    # This avoids issues if the system git initialises repositories with
+    # a default branch that takes the name 'main', or similar, that we don't
+    # want to include in the repository for testing reasons.
+    if repo.active_branch.name != commit_work_to_branch:
+        repo.git.branch("-m", commit_work_to_branch)
+    repo.git.commit("--allow-empty", "-m", "Initial commit to main")
 
-        # Switch to the branch that we want the repo left on
-        switch_if_safe(repo, git_switch_to, True)
+    # Commit all work to this branch
+    repo.git.add(".")
+    repo.git.commit("-m", "Commit all work.")
+
+    # Switch to the branch that we want the repo left on,
+    # otherwise stay on the branch we committed work to.
+    if leave_repo_on_branch is not None:
+        switch_if_safe(repo, leave_repo_on_branch, create=True)
 
     # Run test
     yield
 
 
-## ASSIGNMENTS
-
-
 @pytest.fixture
-def test_data_assignment(test_data_json: Path) -> Assignment:
-    return Assignment.from_json(test_data_json)
+def setup_submission(
+    setup_folder_structure_with_git,
+    tmp_path: Path,
+    request,
+) -> Generator[None, Any, None]:
+    """
+    Sets up a submission folder structure, including a git repository, and allowing for the possibility that
+    the working tree of the git repository is dirty.
+
+    request.param should be a dictionary with the following keys:
+    - "uncommitted": Files tracked by the repository that should be edited, added, but not committed.
+    - "unstaged": Files tracked by the repository that should be edited and not staged.
+    - "untracked": Files to create but not add to the repository.
+
+    Values of these keys should be lists of Path (or str) instances that provide the path - relative to the repository
+    root - to the file to be created / edited.
+    Note that other 'polluting' files that are not affected by the git repository can be added
+    when calling `make_folder_structure`.
+    """
+    params = request.param
+    if isinstance(params, dict):
+        uncommitted = params["uncommitted"] if "uncommitted" in params else []
+        unstaged = params["unstaged"] if "unstaged" in params else []
+        untracked = params["untracked"] if "untracked" in params else []
+    else:
+        uncommitted = []
+        unstaged = []
+        untracked = []
+
+    repo_loc = locate_repo_in_tree(tmp_path)
+    if repo_loc is None:
+        raise RuntimeError(
+            f"Could not find git repository somewhere in the tree starting at {tmp_path}."
+        )
+    repo = git.Repo(repo_loc)
+
+    # Files that are not tracked by the repository
+    for file in [Path(f) for f in untracked]:
+        with open(repo_loc / file, "w") as f:
+            f.write("Untracked file.")
+
+    # Edit files tracked by the repository, and don't stage the changes
+    for file in [Path(f) for f in unstaged]:
+        to_edit = repo_loc / file
+        assert to_edit.is_file(), f"File {to_edit} is not a file!"
+        with open(to_edit, "w") as f:
+            f.write("Overwrite lines in this file, leaving out of the staging area.")
+
+    # Edit files tracked by the repository, add to staging area,
+    # but don't commit the changes
+    for file in [Path(f) for f in uncommitted]:
+        to_edit = repo_loc / file
+        assert to_edit.is_file(), f"File {to_edit} is not a file!"
+        with open(to_edit, "w") as f:
+            f.write("Overwrite lines in this file, leaving uncommitted.")
+        repo.git.add(to_edit)
+
+    repo.close()
+    yield
