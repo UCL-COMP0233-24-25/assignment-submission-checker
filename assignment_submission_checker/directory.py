@@ -8,7 +8,7 @@ from typing import Any, Dict, Generator, Iterator, List, Optional, Set, Tuple, T
 import git
 
 from .git_utils import is_clean, is_git_repo, switch_to_main_if_possible
-from .utils import AssignmentCheckerError
+from .utils import AssignmentCheckerError, match_to_unique_assignments
 
 DirectoryDict: TypeAlias = Dict[str, Any]
 
@@ -252,7 +252,7 @@ class Directory:
             - When this directory should be a git repository, but is not.
             - When there are untracked changes within a git repository.
             - When there are uncommitted changes within a git repository.
-            - When switching to `main` or `master` branch is impossible.
+            - When switching to `main` or another acceptable branch is impossible.
             - When a reference could not be checked out in the repository.
             - When a git repository is present in a directory that should not be a repository.
             - When a compulsory subdirectory is not present.
@@ -561,29 +561,57 @@ class Directory:
         possible_names = [
             subdir
             for subdir in os.listdir(directory)
-            if os.path.isdir(subdir)
+            if os.path.isdir(directory / subdir)
             and subdir not in [fixed.name for fixed in self.fixed_name_subdirs]
         ]
         matches = {}
         not_matched = []
+
         # Attempt to match subdirectories to those available in the filesystem.
-        # Start with compulsory directories, before considering optional directories
-        for subdir in [s for s in self.variable_name_subdirs if not s.is_optional] + [
-            s for s in self.variable_name_subdirs if s.is_optional
-        ]:
-            compatible_directory = None
+        # Create a list of all possible matches, for each subdirectory
+        possible_matches_compulsory = {}
+        possible_matches_optional = {}
+        for subdir in self.variable_name_subdirs:
+            compatible_directories: List[str] = []
             for pos_name in possible_names:
                 fatal, warnings, _ = subdir.check_against_directory(
                     directory / pos_name, do_not_set_name=True
                 )
                 if (fatal is None) and (not warnings):
-                    compatible_directory = pos_name
+                    compatible_directories.append(pos_name)
 
-            # Record if a match was found, or flag if not found and the subdirectory is compulsory
-            if compatible_directory:
-                matches[compatible_directory] = subdir
-                possible_names.remove(compatible_directory)
-            elif not subdir.is_optional:
-                not_matched.append(subdir)
+            if subdir.is_optional:
+                possible_matches_optional[subdir.name] = set(compatible_directories)
+            else:
+                possible_matches_compulsory[subdir.name] = set(compatible_directories)
+
+        # Possible matches now maps the name of a subdir to a list of all
+        # folders on the filesystem that it could match to.
+        # Determine if there is a safe, unique mapping between all directories.
+        all_are_mapped = match_to_unique_assignments(
+            {**possible_matches_compulsory, **possible_matches_optional}
+        )
+        if all_are_mapped:
+            # all_are_mapped maps subdir.name to a directory.
+            # We need to flip this association and also provide subdir itself as the value.
+            for subdir_name, matched_directory in all_are_mapped.items():
+                matches[matched_directory] = [
+                    subdir for subdir in self.variable_name_subdirs if subdir.name == subdir_name
+                ][0]
+        else:
+            # We could not map all compulsory + optional subdirectories with variable names.
+            # However, we can at least try to map the compulsory ones.
+            not_matched = [s for s in self.variable_name_subdirs if s.is_optional]
+
+            compulsory_are_matched = match_to_unique_assignments(possible_matches_compulsory)
+            if compulsory_are_matched:
+                for subdir_name, matched_directory in compulsory_are_matched.items():
+                    matches[matched_directory] = [
+                        subdir
+                        for subdir in self.variable_name_subdirs
+                        if subdir.name == subdir_name
+                    ][0]
+            else:
+                not_matched = self.variable_name_subdirs
 
         return matches, not_matched
