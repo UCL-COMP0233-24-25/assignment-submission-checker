@@ -159,7 +159,8 @@ def setup_folder_structure_with_git(
     """
     Sets up the folder structure provided, potentially adding a git repository to the file structure.
 
-    request.param should be a dictionary that contains the following keys;
+    request.param should be a dictionary that contains the following keys,
+    or the name of a fixture that returns such a dictionary;
 
     - 'checkout': The value of this key should be a string giving the name of the branch to checkout after
     committing the files, leaving the repository on. Defaults to 'main' if not provided.
@@ -169,10 +170,13 @@ def setup_folder_structure_with_git(
     initialise the git repository in.
     It will default to the top-level directory in `make_folder_structure` if not provided.
     """
-    if isinstance(request.param, dict):
-        leave_repo_on_branch = request.param["checkout"] if "checkout" in request.param else None
-        commit_work_to_branch = request.param["commit"] if "commit" in request.param else "main"
-        make_git_root_at = request.param["rootdir"] if "rootdir" in request.param else "."
+    params = request.param
+    if isinstance(params, str):
+        params = request.getfixturevalue(params)
+    if isinstance(params, dict):
+        leave_repo_on_branch = params["checkout"] if "checkout" in params else None
+        commit_work_to_branch = params["commit"] if "commit" in params else "main"
+        make_git_root_at = params["rootdir"] if "rootdir" in params else "."
     else:
         commit_work_to_branch = "main"
         leave_repo_on_branch = None

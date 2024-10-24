@@ -5,6 +5,11 @@ import pytest
 
 from assignment_submission_checker.directory import Directory
 
+# TSTK: There are known bugs here - when dealing with two optional subdirectories that
+# can feasibly have the same structure when submitted, the method of assigning
+# which folder to which will not give a unique answer, which can result in the
+# two folders being labelled as each other.
+
 
 @pytest.fixture
 def directory_structure_for_variable_name_checking() -> Directory:
@@ -29,22 +34,22 @@ def directory_structure_for_variable_name_checking() -> Directory:
             "nested-dir-4": {
                 "variable-name": "*",
                 "compulsory": ["a.py", "b.py"],
-                "data-file-types": ["*.csv"],
+                "data-file-types": ["*.json"],
                 "nested-nested-dir-1": {
                     "variable-name": "*nested?",
-                    "data-file-types": ["*.csv"],
+                    "compulsory": ["data.csv"],
                 },
                 "nested-nested-dir-2": {
-                    "data-file-types": ["*.csv"],
+                    "compulsory": ["data.csv"],
                 },
             },
             "nested-dir-5": {
                 "variable-name": "*",
                 "compulsory": ["a.py", "b.py"],
-                "data-file-types": ["*.csv"],
+                "data-file-types": ["*.json"],
                 "nested-nested-dir-1": {
                     "variable-name": "*nested?",
-                    "data-file-types": ["*.csv"],
+                    "compulsory": ["data.csv"],
                 },
                 "nested-nested-dir-2": {
                     "variable-name": "?nested*",
@@ -61,13 +66,13 @@ def file_structure_matching_variable_names() -> Dict[str, List[str | Dict]]:
     return {
         "top-level-folder": [
             {"matches-1": ["a.py", "b.py"]},
-            {"matches-2": ["a.py", "b.py", "data.csv"]},
+            {"matches-2": ["a.py", "b.py", "data_2.csv"]},
             {"matches-3": ["a.py"]},
             {
                 "matches-4": [
                     "a.py",
                     "b.py",
-                    "data.csv",
+                    "alt_data.json",
                     {"sub-nested1": ["data.csv"]},
                     {"nested-nested-dir-2": ["data.csv"]},
                 ]
@@ -76,7 +81,7 @@ def file_structure_matching_variable_names() -> Dict[str, List[str | Dict]]:
                 "matches-5": [
                     "a.py",
                     "b.py",
-                    "data.csv",
+                    "alt_data.json",
                     {"sub-nested1": ["data.csv"]},
                     {"2nested-sub": ["data.csv"]},
                 ]
@@ -103,5 +108,6 @@ def test_match_variable_names(
     assert len(a) == 5, "All subdirectories should have been matched!"
     for i in range(1, 6):
         assert (
-            a[f"matches-{i}"] is directory_structure_for_variable_name_checking[f"nested-dir-{i}"]
+            a[f"matches-{i}"].name
+            == directory_structure_for_variable_name_checking[f"nested-dir-{i}"].name
         ), f"Wrong directory matched to matches-{i}."

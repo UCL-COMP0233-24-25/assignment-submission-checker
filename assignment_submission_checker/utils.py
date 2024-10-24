@@ -34,6 +34,8 @@ def match_to_unique_assignments(possible_mappings: Dict[Obj, Set[Val]]) -> Dict[
     >>> match_to_unique_assigments(possible_mappings)
     {"a": 1, "b", 3, "c": 2}
     """
+    if possible_mappings:
+        pass
     mappings = {}
     for key, a_value in possible_mappings.items():
         mappings[key] = set(a_value)

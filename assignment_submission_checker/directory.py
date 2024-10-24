@@ -60,7 +60,8 @@ class Directory:
 
         A directory is optional if it contains no compulsory files.
         """
-        return bool(self.compulsory)
+        all_subdirs_are_optional = all(s.is_optional for s in self.subdirs)
+        return all_subdirs_are_optional and not bool(self.compulsory)
 
     @property
     def path_from_root(self) -> Path:
@@ -304,7 +305,7 @@ class Directory:
             )
         if self.name != name_before:
             INFORMATION.append(
-                f"Matched {directory.stem} to folder {self.name} that has a variable name."
+                f"Matched {directory.stem} to folder {name_before} that has a variable name."
             )
 
         # Check for presence (or absence) of git repository
@@ -318,18 +319,18 @@ class Directory:
         missing_compulsory, unexpected, optional = self.check_files(directory)
         if missing_compulsory:
             WARNING.append(
-                f"Your submission is missing the following compulsory files (not found in {directory}):\n"
-                "".join(f"\t{f}\n" for f in missing_compulsory)
+                f"Your submission is missing the following compulsory files (not found in {directory.stem}):\n"
+                + "".join(f"\t{f}\n" for f in missing_compulsory)
             )
         if unexpected:
             WARNING.append(
-                f"The following files were found in {directory}, but were not expected:\n"
-                "".join(f"\t{f}\n" for f in unexpected)
+                f"The following files were found in {directory.stem}, but were not expected:\n"
+                + "".join(f"\t{f}\n" for f in unexpected)
             )
         if optional:
             INFORMATION.append(
-                f"Found the following optional files inside {directory}:\n"
-                "".join(f"\t{f}\n" for f in optional)
+                f"Found the following optional files inside {directory.stem}:\n"
+                + "".join(f"\t{f}\n" for f in optional)
             )
 
         # Delegate further investigation down into subdirectories.
@@ -523,10 +524,11 @@ class Directory:
         if not path_to_subdir.is_dir():
             if subdir.is_optional:
                 information.append(f"Optional subfolder {subdir.name} of {self.name} not found.")
+                return None, warning, information
             else:
                 return (
                     AssignmentCheckerError(
-                        f"Expected subdirectory {subdir} to be present in {self.name}, but it is not."
+                        f"Expected subdirectory {subdir.name} to be present in {self.name}, but it is not."
                     ),
                     warning,
                     information,
