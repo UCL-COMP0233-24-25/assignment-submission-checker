@@ -32,7 +32,9 @@ def test_init(template_directory: Directory):
     # Validate that we can fetch children via path ref
     data_dir = template_directory[path_to_data]
 
-    assert not data_dir.is_optional, "No compulsory files should imply directory is optional"
+    assert (
+        data_dir.is_optional
+    ), "No compulsory files (nor subdirs to recurse into) should imply directory is optional"
     assert data_dir.is_data_dir
     assert data_dir.path_from_root == Path(path_to_data)
     assert data_dir.parent is repo_directory
