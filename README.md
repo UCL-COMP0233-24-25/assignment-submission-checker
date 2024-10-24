@@ -1,3 +1,7 @@
+# THIS TOOL IS CURRENTLY BEING REDEVELOPED, AND AS SUCH THE API DESCRIBED BELOW IS NOT FULLY IMPLEMENTED
+
+Please check back here next week for updates.
+
 # Assignment Submission Checker
 
 - [Assignment Submission Checker](#assignment-submission-checker)
