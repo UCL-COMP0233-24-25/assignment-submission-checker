@@ -4,6 +4,7 @@ Please check back here next week for updates.
 
 # Assignment Submission Checker
 
+- [THIS TOOL IS CURRENTLY BEING REDEVELOPED, AND AS SUCH THE API DESCRIBED BELOW IS NOT FULLY IMPLEMENTED](#this-tool-is-currently-being-redeveloped-and-as-such-the-api-described-below-is-not-fully-implemented)
 - [Assignment Submission Checker](#assignment-submission-checker)
   - [Overview](#overview)
     - [Disclaimer](#disclaimer)
