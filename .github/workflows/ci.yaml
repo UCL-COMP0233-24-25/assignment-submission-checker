@@ -65,5 +65,10 @@ jobs:
         run: |
           pip install tox tox-gh-actions
 
+      - name: Prepare git config so tox can inherit
+        run: |
+          git config --global user.email "arc.teaching@ucl.ac.uk"
+          git config --global user.name "ARC Teaching"
+
       - name: Run tests with tox
         run: tox
