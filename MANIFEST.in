@@ -8,4 +8,5 @@ exclude tox.ini
 recursive-include assignment_submission_checker *.py
 
 prune tests
+prune specs
 prune .github

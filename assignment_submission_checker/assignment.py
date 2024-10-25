@@ -1,184 +1,202 @@
-import os
-import shutil
-import tarfile
-import zipfile
-from dataclasses import dataclass, field
+from __future__ import annotations
+
+import json
 from datetime import datetime
-from glob import glob
 from pathlib import Path
-from random import choices
-from string import ascii_letters, digits
-from typing import ClassVar, List, Literal, Tuple
+from typing import List, Optional
 
-import git
+from .directory import Directory, DirectoryDict
+from .utils import AssignmentCheckerError, copy_tree
 
-from .utils import on_readonly_error
+DIR_STRUCTURE_KEY = "structure"
+GIT_BRANCH_KEY = "git-marking-branch"
+ID_KEY = "number"
+OTHER_BRANCHES_KEY = "git-alternative-branches"
+TITLE_KEY = "title"
+YEAR_KEY = "year"
+
+OPTIONAL_KEYS = [
+    DIR_STRUCTURE_KEY,
+    GIT_BRANCH_KEY,
+    ID_KEY,
+    OTHER_BRANCHES_KEY,
+    TITLE_KEY,
+    YEAR_KEY,
+]
 
 
-@dataclass
 class Assignment:
-    # A name that can be assigned to the assignment for printing purposes
-    name: str
-    # The path to the submission archive currently being examined.
-    # This should be set with the set_target_archive method,
-    # and it defaults to None.
-    target_archive: ClassVar[Path] = None
-    # The location of the root of the git repository that should have been submitted.
-    # If None, no git repository is expected.
-    git_root: Path = None
-    # Whether this is a group assignment, which will flag an alternative expected name,
-    # as well as alternative directory structure.
-    group_assignment: bool = False
 
-    # A name for the temporary directory in which the archive will be extracted,
-    # then cleaned once checks are completed
-    tmp_dir: ClassVar[Path]
+    _git_allowable_branches: List[str]
+    _git_branch_to_mark: str
 
-    # Archive tool to use to extract the submission archive
-    archive_tool: Literal["tar", "zip"] = "tar"
-    # List of files that are expected to be present in the submission archive,
-    # given as relative paths from the TOP LEVEL of the extracted archive.
-    expected_files: List[Path] = field(default_factory=lambda: [])
+    directory_structure: Directory
+    id: str
+    title: str
+    year: int
 
     @property
-    def top_level_folder(self) -> str:
-        """
-        The name of the top-level folder that should appear after extracting the archive.
-        """
-        if self.target_archive is not None:
-            return self.target_archive.stem.split(".")[0]  # .tar.gz has two suffixes
+    def academic_year(self) -> str:
+        """Academic year that the assignment was/is released in."""
+        return f"{self.year}-{self.year+1}"
+
+    @property
+    def git_allowable_branches(self) -> List[str]:
+        if self._git_allowable_branches is not None:
+            return self._git_allowable_branches
         else:
-            return None
+            return []
 
-    def __post_init__(self) -> None:
+    @property
+    def git_branch_to_mark(self) -> str:
+        if self._git_branch_to_mark is not None:
+            return self._git_branch_to_mark
+        else:
+            return "main"
+
+    @property
+    def name(self) -> str:
+        """Assignment {number}, {academic year}: {title}"""
+        return f"Assignment {self.id}, {self.academic_year}: {self.title}"
+
+    @classmethod
+    def from_json(cls, file: Optional[Path] = None, json_str: Optional[str] = None) -> Assignment:
         """
-        Create a random string to use as the temporary directory for checking the submission status,
-        once the __init__ method has set member variables.
+        Creates an `Assignment` instance by reading a json file, or a json-encoded string.
+
+        Reading from a file trumps reading a string.
+
+        :param file: Path to a compatible json file.
+        :param json_str: String encoding a valid json file, which can be loaded with `json.loads`.
+        :returns: An `Assignment` instance with the specification found in the file.
         """
-        self.tmp_dir = Path(
-            datetime.utcnow().strftime("%Y%m%d%H%M%S")
-            + "".join(choices(ascii_letters + digits, k=16))
+        if file is not None:
+            with open(file, "r") as f:
+                json_info = json.load(f)
+        elif json_str is not None:
+            json_info = json.loads(json_str)
+        else:
+            raise RuntimeError("Please provide either a valid file path, or json string.")
+
+        for key in OPTIONAL_KEYS:
+            if key not in json_info:
+                json_info[key] = None
+        return Assignment(
+            git_branch_to_mark=json_info[GIT_BRANCH_KEY],
+            git_other_branches=json_info[OTHER_BRANCHES_KEY],
+            id=json_info[ID_KEY],
+            structure=json_info[DIR_STRUCTURE_KEY],
+            title=json_info[TITLE_KEY],
+            year=json_info[YEAR_KEY],
         )
-        # Force absolute pathing to the temporary directory
-        self.tmp_dir = (Path(os.getcwd()) / self.tmp_dir).resolve()
 
-        self.git_root = Path(self.git_root)
+    def __init__(
+        self,
+        git_branch_to_mark: Optional[str] = None,
+        git_other_branches: Optional[List[str]] = None,
+        id: Optional[int | str] = None,
+        structure: Optional[DirectoryDict] = None,
+        title: Optional[str] = None,
+        year: Optional[int | str] = None,
+    ) -> None:
+        if id is None:
+            id = 1
+        if structure is None:
+            structure = {}
+        if not title:
+            title = "<No title given>"
+        if year is None:
+            year = datetime.now().year
 
-        if self.archive_tool not in ["tar", "zip"]:
-            raise ValueError(f"I don't recognise the compression tool {self.archive_tool}.")
+        self._git_branch_to_mark = git_branch_to_mark
+        self._git_allowable_branches = git_other_branches
+        self.directory_structure = Directory("root", structure)
+        self.id = str(id).rjust(3, "0")
+        self.title = str(title)
+        self.year = int(year)
 
-        return
-
-    def check_for_git_root(self) -> Tuple[bool, bool, str, str]:
+    def parse_into_output(
+        self,
+        fatal: AssignmentCheckerError | None,
+        warnings: List[str] = [],
+        information: List[str] = [],
+    ) -> str:
         """
-        Check that a git repository exists in the submission at the location provided.
-
-        Return a tuple of three elements:
-        1. A bool, whether the repository was found at the expected location. Note that if self.git_root is None, this always returns FALSE.
-        2. A bool, whether the repository was clean after extraction.
-        3. Any error message that was produced in attempting to find the repository (only non-empty if the repository was not present).
-        4. A message about the untracked changes that were present in a dirty working tree.
+        Parses the output from assignment validation into a human-readable string that reports
+        the findings of the validation process.
         """
-        repo_present = False
-        repo_present_msg = ""
-        repo_clean = False
-        repo_clean_msg = ""
-        if self.git_root is not None:
-            # Attempt to find the repository
-            try:
-                repo = git.Repo(self.tmp_dir / f"{self.top_level_folder}" / self.git_root)
-                repo_present = True
-            except Exception as e:
-                repo_present = False
-                repo_present_msg = f"Expected to find a git repository at {self.top_level_folder / self.git_root} but encountered an error:\n\t{str(e)}"
+        # Report should start with a header so it is clear which assignment spec the user
+        # is validating against.
+        main_heading = "Validation Report"
+        heading_str = f"{main_heading}\n{'-' * len(main_heading)}"
 
-            # If there is a repository, check the working tree is clean
-            if repo_present:
-                repo_clean = not repo.is_dirty(untracked_files=True)
-
-                # Provide information about a dirty working tree if appropriate
-                if not repo_clean:
-                    if repo.untracked_files:
-                        repo_clean_msg = f"You have untracked files in your git repository: {repo.untracked_files}"
-                    else:
-                        changed = [item.a_path for item in repo.index.diff(None)]
-                        if changed:
-                            repo_clean_msg = f"You have untracked changes to the following files in your git repository: {changed}"
-
-                # Close repo before ending function session
-                repo.close()
-
-        return repo_present, repo_clean, repo_present_msg, repo_clean_msg
-
-    def extract_to_temp_dir(self) -> None:
-        """
-        Extract the submission folder into the temporary directory.
-
-        Removes / cleans the temporary directory if it already exists for safety.
-        """
-        # If there is no current target archive set, raise error and halt
-        if self.target_archive is None:
-            raise ValueError(f"No target archive set, self.target_archive = {self.target_archive}.")
-
-        # Clean temporary directory if it already exists
-        self.purge_tmp_dir()
-
-        # Create new temporary directory and extract submission folder into it
-        os.mkdir(self.tmp_dir)
-
-        # Attempt extraction
-        try:
-            if self.archive_tool == "tar":
-                tarfile.open(self.target_archive).extractall(path=self.tmp_dir)
-            elif self.archive_tool == "zip":
-                zipfile.ZipFile(self.target_archive).extractall(path=self.tmp_dir)
-        except Exception as e:
-            raise RuntimeError(
-                f"ERROR: Could not extract the file {self.target_archive} using {self.archive_tool}, encountered the following error:\n\t{str(e)}.\nMake sure you have compressed your assignment using the correct compression tool (tar/zip) and have provided the correct path to your submission file."
+        # If fatal is not None, it will be an AssignmentCheckerError which has prevented
+        # the validation from completing. It also implies the submission is in the wrong
+        # format. This should be clearly highlighted.
+        fatal_heading = "ERROR IN SUBMISSION FORMAT DETECTED"
+        fatal_str = ""
+        if fatal is not None:
+            fatal_str = (
+                f"{fatal_heading}\n"
+                f"{'-' * len(fatal_heading)}\n"
+                "The assignment checker encountered the following error in your submission format. "
+                "This has prevented complete validation of your assignment format.\n"
+                "\t" + str(fatal).replace("\n", "\n\t")
             )
 
-        return
+        # Warnings and Information should be lists, obtained in sequence from recursing down
+        # the directory tree.
+        # As such, it should be possible to just combine these line-by-line.
+        warnings_heading = "Warnings"
+        warnings_str = ""
+        if warnings:
+            warnings_str = (
+                f"{warnings_heading}\n"
+                f"{'-' * len(warnings_heading)}\n"
+                "Encountered the following problems with your submission:\n\t"
+            ) + "\n".join(s.replace("\n", "\n\t") for s in warnings)
 
-    def purge_tmp_dir(self) -> None:
+        information_heading = "Information"
+        information_str = ""
+        if information:
+            information_str = (
+                f"{information_heading}\n"
+                f"{'-' * len(information_heading)}\n"
+                "Additional information gathered during the validation. "
+                "Information reported here does not invalidate the submission, "
+                "though you may wish to check you expect everything here to apply "
+                "to your submission.\n\t"
+            ) + "\n".join(s.replace("\n", "\n\t") for s in information)
+
+        if (not fatal_str) and (not warnings_str) and (not information_str):
+            return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
+        return (
+            "\n\n".join([s for s in [heading_str, fatal_str, warnings_str, information_str] if s])
+            + "\n"
+        )
+
+    def validate_assignment(self, submission_dir: Path, tmp_dir: Path) -> str:
         """
-        Remove (if it exists) the temporary directory.
+        Validates that the submission directory provided matches the specifications of this instance.
+
+        The validation process creates a copy of the submission directory and the directory tree
+        beneath it, so operations like git checkouts can be conducted without altering the user's
+        working directory.
+
+        The temporary directory is always manually cleaned up by the program, though the
+        OS should handle this if an uncaught error is encountered.
+
+        :param submission_dir: Path to the root submission directory.
+        :returns: FIXME
         """
-        if os.path.exists(self.tmp_dir) and os.path.isdir(self.tmp_dir):
-            shutil.rmtree(self.tmp_dir, onerror=on_readonly_error)
+        # Copy to the temporary directory
+        submission = copy_tree(submission_dir, tmp_dir, into=True)
 
-        return
+        # Check the submission content
+        fatal, warnings, information = self.directory_structure.check_against_directory(
+            submission, do_not_set_name=False, *self.git_allowable_branches
+        )
 
-    def search_for_missing_files(self) -> Tuple[List[Path], List[Path]]:
-        """
-        Search the extracted archive for the files which are expected to be present in the submission.
-
-        Return two lists: the first of the files that were not found but expected, the second of files that were found but were not expected.
-        """
-        # Fetch all files present in the archive directory, excluding the .git repository
-        archive_root_dir = self.tmp_dir / self.top_level_folder
-        all_files_and_dirs = glob("**", root_dir=archive_root_dir, recursive=True)
-        all_files_present = [
-            Path(file) for file in all_files_and_dirs if not os.path.isdir(archive_root_dir / file)
-        ]
-
-        # Determine which files are expected, but not present
-        # This is the (set) complement of the expected files against those that were found
-        not_found = list(set(self.expected_files) - set(all_files_present))
-
-        # Determine which files were found, but not expected
-        not_expected = list(set(all_files_present) - set(self.expected_files))
-
-        return sorted(not_found), sorted(not_expected)
-
-    def set_target_archive(self, target: Path = None) -> None:
-        """
-        Set the self.target_archive member to the Path provided.
-
-        Throw an error if the target Path does not exist, unless it is None.
-        """
-        if (target is None) or os.path.exists(target):
-            self.target_archive = target
-        else:
-            raise FileNotFoundError(f"Could not locate an archive at {target}")
-
-        return
+        # Parse the output into a string,
+        # and return
+        return self.parse_into_output(fatal, warnings, information)
