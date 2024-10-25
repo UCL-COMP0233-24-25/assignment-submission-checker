@@ -77,3 +77,11 @@ def main(
 
     # Validate and collect output
     return validator()
+
+
+if __name__ == "__main__":
+    out = main(
+        assignment_lookup="2024-001",
+        submission="/home/ccaegra/Documents/COMP0233/rsd-engineeringcourse-assignments/2024-2025/01_depot_locations/sample_solution",
+    )
+    pass

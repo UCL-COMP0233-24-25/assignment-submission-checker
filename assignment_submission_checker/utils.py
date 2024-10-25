@@ -33,6 +33,8 @@ def copy_tree(
     """
     if isinstance(src, str):
         src = Path(src)
+    if isinstance(dest, str):
+        dest = Path(dest)
 
     if into:
         dest = dest / src.stem

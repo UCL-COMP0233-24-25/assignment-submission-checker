@@ -7,8 +7,10 @@ from . import __version__
 from .cli_main import ASSIGNMENT_SPEC_REFERENCES, main
 
 DESCRIPTION = (
-    "A command-line tool to validate the format of your submission for assignment."
-    "The checker requires an internet connection when it is running."
+    "A command-line tool to validate the format of your submission for a COMP0233 assignment. "
+    "The checker requires an internet connection, unless: "
+    "you use the -l or --local-specs option to provide the assignment specification file (.json) locally, "
+    "AND do not use the -g or --github-clone option to request the checker clone your submission from GitHub."
 )
 
 
@@ -20,7 +22,7 @@ class CLIParser(argparse.ArgumentParser):
     """
 
     def error(self, message):
-        self.print_help_and_exit(msg="Error parsing input arguments.")
+        self.print_help_and_exit(msg=message)
 
     def print_help_and_exit(self, msg: str = "", code: int = 2) -> None:
         """
@@ -55,7 +57,7 @@ def cli():
         help="Read assignment specifications from a local file, rather than fetching from the internet. "
         "If you have previously downloaded one of the assignment specifications onto your computer, "
         "you can use this option to run the checker on a local copy of your submission, "
-        "without an internet connection."
+        "without an internet connection. "
         "IF YOU USE this option, your input to the `assignment` argument should be the file path to a "
         "local copy of the assignment specification (.json) you wish to read in. ",
     )
@@ -64,8 +66,8 @@ def cli():
         "--quiet",
         action="store_true",
         help="Suppress printouts to the console. "
-        "You must provide the -o or --output-file value to use this option,"
-        "otherwise the information gathered by the validator will not be saved or displayed.",
+        "You must provide the -o or --output-file value to use this option, "
+        "otherwise the information gathered by the checker will not be saved or displayed.",
     )
     parser.add_argument(
         "-v",
@@ -83,6 +85,7 @@ def cli():
     parser.add_argument(
         "assignment",
         type=str,
+        default=None,
         help="The assignment specification YYYY-assignment_id to validate the submission against, "
         "or the path to the specification file if using the -l or --local-specs option. "
         f"See {ASSIGNMENT_SPEC_REFERENCES}/README.md for an explanation of the YYYY-assignment_id format, "
@@ -91,6 +94,7 @@ def cli():
     parser.add_argument(
         "submission",
         type=str,
+        default=None,
         help="Path to your submission folder, "
         "or the HTTPS / SSH clone link of your GitHub classroom repository if using the -g or --github-clone option.",
     )
@@ -99,8 +103,12 @@ def cli():
     args_to_main = {}
 
     if args.version:
-        print(f"{parser.prog},\nVersion: {__version__}")
+        print(f"{parser.prog}, {__version__}")
         sys.exit(0)
+    if args.assignment is None:
+        parser.print_help_and_exit("assignment argument is required.")
+    elif args.submission is None:
+        parser.print_help_and_exit("submission argument is required.")
 
     # Check that we can actually produce the output
     if args.quiet and (args.output_file is None):

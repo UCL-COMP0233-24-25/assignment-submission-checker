@@ -27,9 +27,10 @@ OPTIONAL_KEYS = [
 
 class Assignment:
 
+    _git_allowable_branches: List[str]
     _git_branch_to_mark: str
+
     directory_structure: Directory
-    git_allowable_branches: List[str]
     id: str
     title: str
     year: int
@@ -38,6 +39,13 @@ class Assignment:
     def academic_year(self) -> str:
         """Academic year that the assignment was/is released in."""
         return f"{self.year}-{self.year+1}"
+
+    @property
+    def git_allowable_branches(self) -> List[str]:
+        if self._git_allowable_branches is not None:
+            return self._git_allowable_branches
+        else:
+            return []
 
     @property
     def git_branch_to_mark(self) -> str:
@@ -75,6 +83,7 @@ class Assignment:
                 json_info[key] = None
         return Assignment(
             git_branch_to_mark=json_info[GIT_BRANCH_KEY],
+            git_other_branches=json_info[OTHER_BRANCHES_KEY],
             id=json_info[ID_KEY],
             structure=json_info[DIR_STRUCTURE_KEY],
             title=json_info[TITLE_KEY],
@@ -94,16 +103,14 @@ class Assignment:
             id = 1
         if structure is None:
             structure = {}
-        if git_other_branches is None:
-            self.git_allowable_branches = []
         if not title:
             title = "<No title given>"
         if year is None:
             year = datetime.now().year
 
         self._git_branch_to_mark = git_branch_to_mark
+        self._git_allowable_branches = git_other_branches
         self.directory_structure = Directory("root", structure)
-        self.git_allowable_branches = git_other_branches
         self.id = str(id).rjust(3, "0")
         self.title = str(title)
         self.year = int(year)
