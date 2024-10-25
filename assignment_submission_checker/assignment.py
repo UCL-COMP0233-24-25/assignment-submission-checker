@@ -1,29 +1,36 @@
 from __future__ import annotations
 
+from datetime import datetime
 import json
-import os
 import shutil
 import tempfile
 from pathlib import Path
 from typing import Any, Optional
-from warnings import warn
 
 from .directory import Directory, DirectoryDict
 from .utils import AssignmentCheckerError, on_readonly_error
 
-ARCHIVE_PATH_KEY = "archive-path"
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
 ID_KEY = "number"
+TITLE_KEY = "title"
 YEAR_KEY = "year"
+
+OPTIONAL_KEYS = [
+    DIR_STRUCTURE_KEY,
+    GIT_BRANCH_KEY,
+    ID_KEY,
+    TITLE_KEY,
+    YEAR_KEY,
+]
 
 
 class Assignment:
 
     _git_branch_to_mark: str
-    assignment_id: str
     directory_structure: Directory
-    git_repo_path: Path
+    id: str
+    title: str
     year: int
 
     @property
@@ -38,10 +45,22 @@ class Assignment:
         else:
             return "main"
 
+    @property
+    def name(self) -> str:
+        """Assignment {number}, {academic year}: {title}"""
+        return f"Assignment {self.id}, {self.academic_year}: {self.title}"
+
     @classmethod
     def copy_to_tmp_location(cls, target_directory: Path, tmp_dir: Path) -> None:
         """
-        Should return the path to the copied directory!
+        Copies the directory tree at `target_directory` to a temporary location on the
+        filesystem.
+
+        This allows us to checkout, revert, and otherwise manipulate files in a safe location
+        on the user's PC, without compromising their submission integrity.
+
+        :param target_directory: Root directory whose tree should be copied.
+        :param tmp_dir: Path to the copy destination.
         """
         if isinstance(target_directory, str):
             target_directory = Path(target_directory)
@@ -58,37 +77,48 @@ class Assignment:
 
     @classmethod
     def from_json(cls, file: Path) -> Assignment:
+        """
+        Creates an `Assignment` instance by reading in a json file containing specifications.
+
+        :param file: Path to a compatible json file.
+        :returns: An `Assignment` instance with the specification found in the file.
+        """
         with open(file, "r") as f:
             json_info = json.load(f)
 
+        for key in OPTIONAL_KEYS:
+            if key not in json_info:
+                json_info[key] = None
         return Assignment(
-            git_branch_to_mark=json_info[GIT_BRANCH_KEY] if GIT_BRANCH_KEY in json_info else None,
-            number=json_info[ID_KEY],
-            year=json_info[YEAR_KEY],
+            git_branch_to_mark=json_info[GIT_BRANCH_KEY],
+            id=json_info[ID_KEY],
             structure=json_info[DIR_STRUCTURE_KEY],
+            title=json_info[TITLE_KEY],
+            year=json_info[YEAR_KEY],
         )
 
     def __init__(
         self,
         git_branch_to_mark: Optional[str] = None,
-        number: int | str = 1,
-        structure: DirectoryDict = {},
-        year: int = 2024,
+        id: Optional[int | str] = None,
+        structure: Optional[DirectoryDict] = None,
+        title: Optional[str] = None,
+        year: Optional[int | str] = None,
     ) -> None:
+        if id is None:
+            id = 1
+        if structure is None:
+            structure = {}
+        if not title:
+            title = "<No title given>"
+        if year is None:
+            year = datetime.now().year
+
         self._git_branch_to_mark = git_branch_to_mark
-
-        self.assignment_id = number if isinstance(number, str) else str(number).zfill(2)
         self.directory_structure = Directory("root", structure)
-        self.year = year
-
-        # Locate any directories that should be git repositories.
-        # Throw an error if there is not exactly 1.
-        git_repos = [d for d in self.directory_structure if d.git_root]
-        if len(git_repos) != 1:
-            raise RuntimeError(
-                f"Assignment has {len(git_repos)} directories defined as git repositories."
-            )
-        self.git_repo = git_repos[0].path_from_root
+        self.id = str(id).rjust(2, "0")
+        self.title = str(title)
+        self.year = int(year)
 
     def _inner_check_submission(self, submission_dir: Path, tmp_dir: Path) -> None:
         """
@@ -140,7 +170,17 @@ class Assignment:
 
     def check_submission(self, submission_dir: Path) -> AssignmentCheckerError | Any:
         """
-        Check the archive provided matches the assignment specifications that have been read in.
+        Validates that the submission directory provided matches the specifications of this instance.
+
+        The validation process creates a copy of the submission directory and the directory tree
+        beneath it, so operations like git checkouts can be conducted without altering the user's
+        working directory.
+
+        The temporary directory is always manually cleaned up by the program, though the
+        OS should handle this if an uncaught error is encountered.
+
+        :param submission_dir: Path to the root submission directory.
+        :returns: FIXME
         """
         unpacking_directory = tempfile.mkdtemp()
         raised_error = None
