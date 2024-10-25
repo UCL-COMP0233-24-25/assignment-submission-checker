@@ -1,9 +1,10 @@
 import os
 import stat
 import shutil
+import tempfile
 from copy import deepcopy
 from pathlib import Path
-from typing import Callable, Dict, List, Set, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Set, TypeVar
 
 Obj = TypeVar("Object")
 Val = TypeVar("Value")
@@ -165,3 +166,57 @@ def on_readonly_error(f: Callable[[Path], None], path: Path, exc_info) -> None:
     """
     os.chmod(path, stat.S_IWRITE)
     f(path)
+
+
+def provide_tmp_directory(
+    clean_on_error: bool = True,
+    clean_on_success: bool = True,
+    pass_dir_as_arg: Optional[str] = None,
+    where: Optional[Path] = None,
+) -> Callable[[Callable[[Any], Any]], Callable[[Any], Any]]:
+    """
+    Wraps the execution of a function with the creation and optional teardown of a
+    temporary directory, that can be optionally passed to the wrapped function.
+
+    :param clean_on_error: If True, the temporary directory that is created will be removed if
+    the wrapped function raises an error.
+    :param clean_on_success: If True, the temporary directory that is created will be removed
+    if the wrapped function returns without raising an error.
+    :param pass_dir_as_arg: If provided, the wrapped function will automatically be passed a
+    keyword argument whose name is the value of `pass_dir_as_arg`, and whose value is the path
+    to the created temporary directory.
+    :param where: If provided, this should be a path to a predefined location to use as the
+    temporary directory. It must not currently exist on the filesystem, to ensure safety when
+    deleting it.
+    """
+
+    def decorator(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
+        tmp_directory = None
+        if where is not None:
+            tmp_directory = where
+            if tmp_directory.exists():
+                raise RuntimeError(
+                    f"Will not use existing location ({where}) as a temporary directory."
+                )
+            tmp_directory.mkdir()
+        else:
+            tmp_directory = tempfile.mkdtemp()
+
+        def _inner(*args, **kwargs) -> Any:
+            return_val = None
+            try:
+                if pass_dir_as_arg:
+                    return_val = func(*args, **kwargs, **{pass_dir_as_arg: tmp_directory})
+                else:
+                    return_val = func(*args, **kwargs)
+            except Exception as e:
+                if clean_on_error:
+                    shutil.rmtree(tmp_directory, onerror=on_readonly_error)
+                raise e
+            if clean_on_success:
+                shutil.rmtree(tmp_directory, onerror=on_readonly_error)
+            return return_val
+
+        return _inner
+
+    return decorator

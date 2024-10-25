@@ -1,14 +1,29 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 import pytest
 
-from assignment_submission_checker.utils import copy_tree, match_to_unique_assignments
+from assignment_submission_checker.utils import (
+    copy_tree,
+    match_to_unique_assignments,
+    provide_tmp_directory,
+)
 
 if TYPE_CHECKING:
     from assignment_submission_checker.utils import Obj, Val
+
+
+def print_passed_str(the_str: str) -> bool:
+    return True if the_str == "foo" else False
+
+
+SET_ERROR = RuntimeError("I always raise an error")
+
+
+def always_raise_error() -> None:
+    raise SET_ERROR
 
 
 @pytest.mark.parametrize(
@@ -62,6 +77,121 @@ def test_copy_tree(
             assert copied_to == destination / copy.stem
         else:
             assert copied_to == destination
+
+
+@pytest.mark.parametrize(
+    [
+        "function",
+        "clean_on_error",
+        "clean_on_success",
+        "pass_as_arg",
+        "error",
+        "return_val",
+        "function_call_args",
+        "function_kwargs",
+    ],
+    [
+        pytest.param(
+            print_passed_str,
+            True,
+            True,
+            None,
+            None,
+            True,
+            ["foo"],
+            None,
+            id="Clean on success",
+        ),
+        pytest.param(
+            print_passed_str,
+            True,
+            False,
+            None,
+            None,
+            False,
+            ["bar"],
+            None,
+            id="No clean on success",
+        ),
+        pytest.param(
+            print_passed_str,
+            True,
+            True,
+            "the_str",
+            None,
+            False,
+            None,
+            None,
+            id="Pass as arg",
+        ),
+        pytest.param(
+            always_raise_error,
+            True,
+            True,
+            None,
+            SET_ERROR,
+            None,
+            None,
+            None,
+            id="Cleanup on error",
+        ),
+        pytest.param(
+            always_raise_error,
+            False,
+            True,
+            None,
+            SET_ERROR,
+            None,
+            None,
+            None,
+            id="No cleanup on error",
+        ),
+    ],
+)
+def test_provide_tmp_directory(
+    tmp_path: Path,
+    function: Callable[[Any], Any],
+    clean_on_error: bool,
+    clean_on_success: bool,
+    pass_as_arg: Optional[str],
+    error: Optional[Exception],
+    return_val: Optional[Any],
+    function_call_args: Optional[List[Any]],
+    function_kwargs: Optional[Dict[str, Any]],
+) -> None:
+    if function_call_args is None:
+        function_call_args = []
+    if function_kwargs is None:
+        function_kwargs = {}
+
+    tmp_location = tmp_path / "test-provide-tmp-dir"
+
+    @provide_tmp_directory(
+        clean_on_error=clean_on_error,
+        clean_on_success=clean_on_success,
+        pass_dir_as_arg=pass_as_arg,
+        where=tmp_location,
+    )
+    def wrapped(*args, **kwargs) -> None:
+        return function(*args, **kwargs)
+
+    if error is not None:
+        with pytest.raises(type(error), match=str(error)):
+            returned = wrapped(*function_call_args, **function_kwargs)
+
+        if clean_on_error:
+            assert not tmp_location.exists(), "TMP directory not cleaned on error."
+        else:
+            assert tmp_location.exists(), "TMP directory was cleaned on error."
+    else:
+        returned = wrapped(*function_call_args, **function_kwargs)
+
+        if clean_on_success and error is None:
+            assert not tmp_location.exists(), "TMP directory was not cleaned on success."
+        elif not clean_on_success and error is None:
+            assert tmp_location.exists(), "TMP directory was cleaned on success."
+
+        assert return_val == returned, "Wrapped function did not return expected return value."
 
 
 @pytest.mark.parametrize(
