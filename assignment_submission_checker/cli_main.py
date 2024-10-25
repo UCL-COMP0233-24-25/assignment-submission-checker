@@ -2,8 +2,8 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Optional
 
-from git import Repo
 import requests
+from git import Repo
 
 from assignment_submission_checker.assignment import Assignment
 from assignment_submission_checker.utils import provide_tmp_directory

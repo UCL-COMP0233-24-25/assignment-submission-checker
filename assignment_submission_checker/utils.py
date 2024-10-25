@@ -1,6 +1,6 @@
 import os
-import stat
 import shutil
+import stat
 from copy import deepcopy
 from pathlib import Path
 from tempfile import mkdtemp
