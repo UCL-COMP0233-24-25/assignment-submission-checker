@@ -52,15 +52,23 @@ class Assignment:
         return f"Assignment {self.id}, {self.academic_year}: {self.title}"
 
     @classmethod
-    def from_json(cls, file: Path) -> Assignment:
+    def from_json(cls, file: Optional[Path] = None, json_str: Optional[str] = None) -> Assignment:
         """
-        Creates an `Assignment` instance by reading in a json file containing specifications.
+        Creates an `Assignment` instance by reading a json file, or a json-encoded string.
+
+        Reading from a file trumps reading a string.
 
         :param file: Path to a compatible json file.
+        :param json_str: String encoding a valid json file, which can be loaded with `json.loads`.
         :returns: An `Assignment` instance with the specification found in the file.
         """
-        with open(file, "r") as f:
-            json_info = json.load(f)
+        if file is not None:
+            with open(file, "r") as f:
+                json_info = json.load(f)
+        elif json_str is not None:
+            json_info = json.loads(json_str)
+        else:
+            raise RuntimeError("Please provide either a valid file path, or json string.")
 
         for key in OPTIONAL_KEYS:
             if key not in json_info:
@@ -96,7 +104,7 @@ class Assignment:
         self._git_branch_to_mark = git_branch_to_mark
         self.directory_structure = Directory("root", structure)
         self.git_allowable_branches = git_other_branches
-        self.id = str(id).rjust(2, "0")
+        self.id = str(id).rjust(3, "0")
         self.title = str(title)
         self.year = int(year)
 
@@ -126,7 +134,7 @@ class Assignment:
                 f"{'-' * len(fatal_heading)}\n"
                 "The assignment checker encountered the following error in your submission format."
                 "This has prevented complete validation of your assignment format.\n"
-                f"\t{str(fatal).replace("\n", "\n\t")}"
+                "\t" + str(fatal).replace("\n", "\n\t")
             )
 
         # Warnings and Information should be lists, obtained in sequence from recursing down
@@ -152,10 +160,12 @@ class Assignment:
                 "though you may wish to check you expect everything here to apply "
                 "to your submission.\n"
             ) + "\n".join(s.replace("\n", "\n\t") for s in information)
-        
+
         if (not fatal_str) and (not warnings_str) and (not information_str):
             return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
-        return "\n\n".join([s for s in [heading_str, fatal_str, warnings_str, information_str] if s])
+        return "\n\n".join(
+            [s for s in [heading_str, fatal_str, warnings_str, information_str] if s]
+        )
 
     def validate_assignment(
         self, submission_dir: Path, tmp_dir: Path
