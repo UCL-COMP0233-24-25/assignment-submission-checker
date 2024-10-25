@@ -1,8 +1,12 @@
 import os
 import stat
+import shutil
 from copy import deepcopy
 from pathlib import Path
 from typing import Callable, Dict, List, Set, TypeVar
+
+Obj = TypeVar("Object")
+Val = TypeVar("Value")
 
 
 class AssignmentCheckerError(Exception):
@@ -12,8 +16,29 @@ class AssignmentCheckerError(Exception):
     """
 
 
-Obj = TypeVar("Object")
-Val = TypeVar("Value")
+def copy_tree(
+    src: Path,
+    dest: Path,
+    into: bool = False,
+) -> Path:
+    """
+    Copies the directory tree to the location on the filesystem.
+
+    Returns the path to the copied tree.
+
+    :param src: Root directory whose tree should be copied.
+    :param dest: Path to the copy destination.
+    :param into: If True, then src will be copied into dest, under the name dest / src.stem, rather than directly to the destination location.
+    """
+    if isinstance(src, str):
+        src = Path(src)
+
+    if into:
+        dest = dest / src.stem
+
+    shutil.copytree(src, dest, symlinks=False, dirs_exist_ok=False)
+
+    return dest
 
 
 def match_to_unique_assignments(possible_mappings: Dict[Obj, Set[Val]]) -> Dict[Obj, Val]:

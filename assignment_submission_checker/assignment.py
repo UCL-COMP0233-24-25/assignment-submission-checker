@@ -51,31 +51,6 @@ class Assignment:
         return f"Assignment {self.id}, {self.academic_year}: {self.title}"
 
     @classmethod
-    def copy_to_tmp_location(cls, target_directory: Path, tmp_dir: Path) -> None:
-        """
-        Copies the directory tree at `target_directory` to a temporary location on the
-        filesystem.
-
-        This allows us to checkout, revert, and otherwise manipulate files in a safe location
-        on the user's PC, without compromising their submission integrity.
-
-        :param target_directory: Root directory whose tree should be copied.
-        :param tmp_dir: Path to the copy destination.
-        """
-        if isinstance(target_directory, str):
-            target_directory = Path(target_directory)
-
-        if not target_directory.is_dir():
-            raise AssignmentCheckerError(f"Target {target_directory} is not a directory.")
-
-        try:
-            shutil.copytree(target_directory, tmp_dir, symlinks=False, dirs_exist_ok=False)
-        except Exception as e:
-            raise AssignmentCheckerError(
-                f"Could not copy the submission directory {target_directory} to a temporary location, encountered the following error:\n\t{str(e)}."
-            )
-
-    @classmethod
     def from_json(cls, file: Path) -> Assignment:
         """
         Creates an `Assignment` instance by reading in a json file containing specifications.

@@ -1,8 +1,67 @@
-from typing import Dict, List
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import pytest
 
-from assignment_submission_checker.utils import Obj, Val, match_to_unique_assignments
+from assignment_submission_checker.utils import copy_tree, match_to_unique_assignments
+
+if TYPE_CHECKING:
+    from assignment_submission_checker.utils import Obj, Val
+
+
+@pytest.mark.parametrize(
+    ["make_folder_structure", "copy", "destination", "into", "expected_error"],
+    [
+        pytest.param(
+            "template_dir_dict",
+            "top-level-folder",
+            "new-top-level",
+            True,
+            None,
+        ),
+        pytest.param(
+            "template_dir_dict",
+            "top-level-folder",
+            "new-top-level",
+            False,
+            None,
+        ),
+        pytest.param(
+            "template_dir_dict",
+            "i-dont-exist",
+            "new-top-level",
+            False,
+            FileNotFoundError,
+        ),
+    ],
+    indirect=["make_folder_structure"],
+)
+def test_copy_tree(
+    make_folder_structure,
+    tmp_path: Path,
+    copy: Path,
+    destination: Path,
+    into: bool,
+    expected_error: Optional[Exception],
+) -> None:
+    """Simple check that copy_tree works as intended."""
+    copy, destination = Path(copy), Path(destination)
+
+    copy = tmp_path / copy
+    destination = tmp_path / destination
+
+    if expected_error is not None:
+        with pytest.raises(expected_error):
+            copy_tree(copy, destination)
+    else:
+        copied_to = copy_tree(copy, destination, into=into)
+        assert copied_to.is_dir()
+        if into:
+            assert copied_to == destination / copy.stem
+        else:
+            assert copied_to == destination
 
 
 @pytest.mark.parametrize(
