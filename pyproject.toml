@@ -6,7 +6,7 @@ license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [{ name = "William Graham", email = "william.graham@ucl.ac.uk" }]
 classifiers = ["Programming Language :: Python :: 3.10"]
-dependencies = ["gitpython"]
+dependencies = ["gitpython", "requests"]
 dynamic = ["version"]
 
 [project.optional-dependencies]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from .directory import Directory, DirectoryDict
 from .utils import AssignmentCheckerError, copy_tree
@@ -167,9 +167,7 @@ class Assignment:
             [s for s in [heading_str, fatal_str, warnings_str, information_str] if s]
         )
 
-    def validate_assignment(
-        self, submission_dir: Path, tmp_dir: Path
-    ) -> AssignmentCheckerError | Any:
+    def validate_assignment(self, submission_dir: Path, tmp_dir: Path) -> str:
         """
         Validates that the submission directory provided matches the specifications of this instance.
 

@@ -1,9 +1,9 @@
 import os
 import stat
 import shutil
-import tempfile
 from copy import deepcopy
 from pathlib import Path
+from tempfile import mkdtemp
 from typing import Any, Callable, Dict, List, Optional, Set, TypeVar
 
 Obj = TypeVar("Object")
@@ -200,7 +200,7 @@ def provide_tmp_directory(
                 )
             tmp_directory.mkdir()
         else:
-            tmp_directory = tempfile.mkdtemp()
+            tmp_directory = mkdtemp()
 
         def _inner(*args, **kwargs) -> Any:
             return_val = None
