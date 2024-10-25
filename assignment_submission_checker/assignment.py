@@ -2,17 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime
 import json
-import shutil
-import tempfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from .directory import Directory, DirectoryDict
-from .utils import AssignmentCheckerError, on_readonly_error
+from .utils import AssignmentCheckerError, copy_tree
 
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
 ID_KEY = "number"
+OTHER_BRANCHES_KEY = "git-alternative-branches"
 TITLE_KEY = "title"
 YEAR_KEY = "year"
 
@@ -20,6 +19,7 @@ OPTIONAL_KEYS = [
     DIR_STRUCTURE_KEY,
     GIT_BRANCH_KEY,
     ID_KEY,
+    OTHER_BRANCHES_KEY,
     TITLE_KEY,
     YEAR_KEY,
 ]
@@ -29,6 +29,7 @@ class Assignment:
 
     _git_branch_to_mark: str
     directory_structure: Directory
+    git_allowable_branches: List[str]
     id: str
     title: str
     year: int
@@ -75,6 +76,7 @@ class Assignment:
     def __init__(
         self,
         git_branch_to_mark: Optional[str] = None,
+        git_other_branches: Optional[List[str]] = None,
         id: Optional[int | str] = None,
         structure: Optional[DirectoryDict] = None,
         title: Optional[str] = None,
@@ -84,6 +86,8 @@ class Assignment:
             id = 1
         if structure is None:
             structure = {}
+        if git_other_branches is None:
+            self.git_allowable_branches = []
         if not title:
             title = "<No title given>"
         if year is None:
@@ -91,59 +95,71 @@ class Assignment:
 
         self._git_branch_to_mark = git_branch_to_mark
         self.directory_structure = Directory("root", structure)
+        self.git_allowable_branches = git_other_branches
         self.id = str(id).rjust(2, "0")
         self.title = str(title)
         self.year = int(year)
 
-    def _inner_check_submission(self, submission_dir: Path, tmp_dir: Path) -> None:
+    def parse_into_output(
+        self,
+        fatal: AssignmentCheckerError | None,
+        warnings: List[str] = [],
+        information: List[str] = [],
+    ) -> str:
         """
-        Wrapped steps for the check_submission method.
-
-        We do not have to worry about cleaning up the temporary directory, since the
-        outer wrapping method will take care of this.
-        We should also be able to edit the temporary directory's contents as we see fit.
+        Parses the output from assignment validation into a human-readable string that reports
+        the findings of the validation process.
         """
-        # REWORK ME!
-        # self.copy_to_tmp_location(target_directory=submission_dir, tmp_dir=tmp_dir)
+        # Report should start with a header so it is clear which assignment spec the user
+        # is validating against.
+        main_heading = "Validation Report"
+        heading_str = f"{main_heading}\n{'-' * len(main_heading)}"
 
-        # # Assert that a single folder has now been placed into the temporary directory
-        # path_objs = os.listdir(tmp_dir)
-        # file_objs = [f for f in path_objs if os.path.isfile(f)]
-        # dir_objs = [Path(f) for f in path_objs if os.path.isdir(f)]
+        # If fatal is not None, it will be an AssignmentCheckerError which has prevented
+        # the validation from completing. It also implies the submission is in the wrong
+        # format. This should be clearly highlighted.
+        fatal_heading = "ERROR IN SUBMISSION FORMAT DETECTED"
+        fatal_str = ""
+        if fatal is not None:
+            fatal_str = (
+                f"{fatal_heading}\n"
+                f"{'-' * len(fatal_heading)}\n"
+                "The assignment checker encountered the following error in your submission format."
+                "This has prevented complete validation of your assignment format.\n"
+                f"\t{str(fatal).replace("\n", "\n\t")}"
+            )
 
-        # if file_objs:
-        #     warn(
-        #         "The following files were present at top-level after extracting your submission:\n"
-        #         "".join(f"\t{f}\n" for f in file_objs)
-        #     )
+        # Warnings and Information should be lists, obtained in sequence from recursing down
+        # the directory tree.
+        # As such, it should be possible to just combine these line-by-line.
+        warnings_heading = "Warnings"
+        warnings_str = ""
+        if warnings:
+            warnings_str = (
+                f"{warnings_heading}\n"
+                f"{'-' * len(warnings_heading)}\n"
+                "Encountered the following problems with your submission:\n"
+            ) + "\n".join(s.replace("\n", "\n\t") for s in warnings)
 
-        # submission_dir = None
-        # if not dir_objs:
-        #     raise AssignmentCheckerError("FATAL: No directory produced when extracting archive.")
-        # else:
-        #     if len(dir_objs) == 1:
-        #         submission_dir = tmp_dir / dir_objs[0]
-        #     else:
-        #         warn(
-        #             f"Detected multiple top-level directories when extracting your archive: {dir_objs}"
-        #         )
-        #         # Check if the extra directories are hidden, which could indicate metadata files from OSes
-        #         hidden_dirs = [d for d in dir_objs if str(d).startswith(".")]
-        #         non_hidden_dirs = list(set(dir_objs) - set(hidden_dirs))
-        #         if len(non_hidden_dirs) == 1:
-        #             submission_dir = tmp_dir / non_hidden_dirs[0]
-        #         else:
-        #             raise AssignmentCheckerError(
-        #                 "You have multiple top-level directories within your submission folder."
-        #             )
+        information_heading = "Information"
+        information_str = ""
+        if information:
+            information_str = (
+                f"{information_heading}\n"
+                f"{'-' * len(information_heading)}\n"
+                "Additional information gathered during the validation. "
+                "Information reported here does not invalidate the submission, "
+                "though you may wish to check you expect everything here to apply "
+                "to your submission.\n"
+            ) + "\n".join(s.replace("\n", "\n\t") for s in information)
+        
+        if (not fatal_str) and (not warnings_str) and (not information_str):
+            return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
+        return "\n\n".join([s for s in [heading_str, fatal_str, warnings_str, information_str] if s])
 
-        # # Start the checking process
-        # if submission_dir is not None:
-        #     self.directory_structure.check_against_directory(submission_dir)
-        # else:
-        #     raise
-
-    def check_submission(self, submission_dir: Path) -> AssignmentCheckerError | Any:
+    def validate_assignment(
+        self, submission_dir: Path, tmp_dir: Path
+    ) -> AssignmentCheckerError | Any:
         """
         Validates that the submission directory provided matches the specifications of this instance.
 
@@ -157,17 +173,14 @@ class Assignment:
         :param submission_dir: Path to the root submission directory.
         :returns: FIXME
         """
-        unpacking_directory = tempfile.mkdtemp()
-        raised_error = None
+        # Copy to the temporary directory
+        submission = copy_tree(submission_dir, tmp_dir, into=True)
 
-        try:
-            output_from_wrapped_fn = self._inner_check_submission(
-                submission_dir=submission_dir,
-                tmp_dir=unpacking_directory,
-            )
-            shutil.rmtree(unpacking_directory, onerror=on_readonly_error)
-        except Exception as e:
-            raised_error = e
-            shutil.rmtree(unpacking_directory, onerror=on_readonly_error)
+        # Check the submission content
+        fatal, warnings, information = self.directory_structure.check_against_directory(
+            submission, do_not_set_name=False, *self.git_allowable_branches
+        )
 
-        return raised_error if raised_error is not None else output_from_wrapped_fn
+        # Parse the output into a string,
+        # and return
+        return self.parse_into_output(fatal, warnings, information)
