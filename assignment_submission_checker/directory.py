@@ -296,17 +296,24 @@ class Directory:
         # Check name
         name_before = self.name
         if not self.check_name(directory.stem, do_not_set_name=do_not_set_name):
-            return (
-                AssignmentCheckerError(
-                    f"Directory {self.name} expected, but got name {directory.stem}."
-                ),
-                WARNING,
-                INFORMATION,
-            )
+            if self.variable_name:
+                return (
+                    AssignmentCheckerError(
+                        f"Directory '{directory.stem}' does not have the expected form (expected to match '{self.name_pattern}')."
+                    ),
+                    WARNING,
+                    INFORMATION,
+                )
+            else:
+                return (
+                    AssignmentCheckerError(
+                        f"Directory {self.name} expected, but got name {directory.stem}."
+                    ),
+                    WARNING,
+                    INFORMATION,
+                )
         if self.name != name_before:
-            INFORMATION.append(
-                f"Matched {directory.stem} to folder {name_before} that has a variable name."
-            )
+            INFORMATION.append(f"Matched '{directory.stem}' to pattern '{self.name_pattern}'.")
 
         # Check for presence (or absence) of git repository
         error, warnings = self.check_git_repo(directory, *substitutes_for_main_branch)

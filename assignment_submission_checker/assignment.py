@@ -139,7 +139,7 @@ class Assignment:
             fatal_str = (
                 f"{fatal_heading}\n"
                 f"{'-' * len(fatal_heading)}\n"
-                "The assignment checker encountered the following error in your submission format."
+                "The assignment checker encountered the following error in your submission format. "
                 "This has prevented complete validation of your assignment format.\n"
                 "\t" + str(fatal).replace("\n", "\n\t")
             )
@@ -153,7 +153,7 @@ class Assignment:
             warnings_str = (
                 f"{warnings_heading}\n"
                 f"{'-' * len(warnings_heading)}\n"
-                "Encountered the following problems with your submission:\n"
+                "Encountered the following problems with your submission:\n\t"
             ) + "\n".join(s.replace("\n", "\n\t") for s in warnings)
 
         information_heading = "Information"
@@ -165,13 +165,14 @@ class Assignment:
                 "Additional information gathered during the validation. "
                 "Information reported here does not invalidate the submission, "
                 "though you may wish to check you expect everything here to apply "
-                "to your submission.\n"
+                "to your submission.\n\t"
             ) + "\n".join(s.replace("\n", "\n\t") for s in information)
 
         if (not fatal_str) and (not warnings_str) and (not information_str):
             return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
-        return "\n\n".join(
-            [s for s in [heading_str, fatal_str, warnings_str, information_str] if s]
+        return (
+            "\n\n".join([s for s in [heading_str, fatal_str, warnings_str, information_str] if s])
+            + "\n"
         )
 
     def validate_assignment(self, submission_dir: Path, tmp_dir: Path) -> str:
