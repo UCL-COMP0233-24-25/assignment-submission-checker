@@ -14,6 +14,8 @@
       - [Local Specifications](#local-specifications)
       - [GitHub Submissions (Experimental)](#github-submissions-experimental)
       - [Other Usage Options](#other-usage-options)
+  - [Contributing](#contributing)
+    - [Developers](#developers)
 
 ## Overview
 
@@ -150,3 +152,20 @@ For this repository (for example), this would be `git@github.com:UCL-COMP0233-24
 
 #### Other Usage Options
 
+- `-h`, `--help`: Displays the command-line help for the tool.
+- `-q`, `--quiet`: Suppresses the text output of the tool to the terminal. Make sure you're using the `-o`, `--output-file` option in conjunction with this one!
+- `-v`, `--version`: Displays the version of the tool that you currently have installed.
+- `-o`, `--output-file`: If you are finding the text output too long, or want to save it for later, you can have the tool write the output to a text file. You should provide the name of the text file that you want to write immediately after this flag. Note that `assignment-checker -o out.txt <other args>` is equivalent to `assignment-checker <other-args> >> out.txt`.
+
+## Contributing
+
+If you encounter a bug in the submission checker, please [open an issue](https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues).
+In your bug report, please include steps to replicate the bug that you encountered, plus any other relevant information such as the assignment specs you were trying to check against.
+
+### Developers
+
+[Developer docs for this tool are currently pending](https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues/4), but most functions and classes within the package have docstrings to aid in your understanding.
+
+If you would like to contribute to this tool, please fork this repository and open a pull request.
+Once your pull request is ready, please tag `@UCL-COMP0233-24-25/comp0233-admin` for review, and a member of the team will review your pull request at their earliest convenience.
+You can speed up the process by including a helpful title and description in your pull request, and linking to any relevant issues that your pull request addresses.
