@@ -5,6 +5,12 @@ This folder contains `.json` specifications that the `assignment-submission-chec
 Do not delete this folder.
 If this folder is relocated, `assignment_submission_checker.cli:ASSIGNMENT_SPEC_REFERENCES` needs to be correspondingly updated too.
 
+## Explicit List of Files
+
+Explicit list of assignment specifications that are available from this service.
+
+- `2024-001`: Assignment 1, 2024-2025. Planning Delivery Tours.
+
 ## Naming Convention
 
 The naming convention for files in this folder should be

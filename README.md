@@ -3,10 +3,10 @@
 - [Assignment Submission Checker](#assignment-submission-checker)
   - [Overview](#overview)
   - [Disclaimer](#disclaimer)
-    - [MacOS AppleDouble files](#macos-appledouble-files)
   - [Installation](#installation)
     - [Updating](#updating)
   - [Usage](#usage)
+    - [Quick Start](#quick-start)
 
 ## Overview
 
@@ -33,33 +33,10 @@ If you are using the `COMP0233` environment to write your solution, consider mak
 
 ## Disclaimer
 
-The `assignment-checker` command-line program does *not* provide any reflection or indication of the grade you may receive for a submission you make.
+The `assignment-checker` command-line program does **not** provide any reflection or indication of the grade you may receive for a submission you make.
 It only checks whether the organisational structure of your submission matches that which is laid out in the assignment guidelines, so that you can be certain that your submission conforms to said specifications prior to making your submission.
 
 Additionally, it cannot be used as evidence in the case of appeal against the grade awarded for an assignment.
-
-### MacOS AppleDouble files
-
-TSTK convert this to an issue so it can persist outside the README.
-
-If you are running MacOS; you may encounter an issue where certain metadata files and folders are created when compressing or extracting your archive.
-These typically come with names like `._DS_store`, `_MACOSX`, or `._<name_of_an_actual_file_in_your_submission>`.
-The assignment checker will detect such files when it attempts to extract your submission, and will flag them accordingly.
-
-If you are creating your archive via `tar`, a possible workaround to avoid creation of these files is to pass the `--disable-copyfile`;
-
-```bash
-tar --disable-copyfile <usual_arguments_for_compressing>
-```
-
-If you cannot prevent the pollution of your archive with these files;
-
-- Clone your repository onto a UCL machine (or use remote desktop) to get access to a Windows machine, and create the archive on there.
-- If you are working on a group project, consider asking a member of your group who is using Windows or Linux to make the submission folder instead.
-
-If the above does not work, it is likely that the additional files are being created when your submission is being *extracted* rather than when they are being *compressed*.
-In this case, the assignment checker has some built-in robustness, but it cannot catch every case.
-You might consider using the `--ignore-extra-files` flag if you are confident that the only unexpected files are those such as this.
 
 ## Installation
 
@@ -72,7 +49,7 @@ When you make your environment, be sure to select Python 3.10 or later as the ve
 - [Creating a new environment with conda on the command line](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands).
 - [Creating a new environment with the Anaconda GUI](https://docs.anaconda.com/free/navigator/tutorials/manage-environments/#creating-a-new-environment)
 
-Once you have created your environment, be sure to *activate* it before installing.
+Once you have created your environment, be sure to **activate** it before installing.
 You can do this through your `GitBash` (Windows) or terminal (MacOS / Linux):
 
 ```bash
@@ -82,7 +59,7 @@ conda activate my_new_environment
 To install the assignment checker into this environment, you can then run
 
 ```bash
-python -m pip install git+https://github.com/UCL-COMP0233-23-24/assignment-submission-checker
+python -m pip install git+https://github.com/UCL-COMP0233-24-25/assignment-submission-checker
 ```
 
 The package will then place a command-line program, `assignment-checker`, into your environment.
@@ -96,7 +73,27 @@ Don't forget to run these in the same conda environment as you originally instal
 
 ```bash
 python -m pip uninstall assignment-submission-checker                                           # Uninstall the old version, if you have it installed
-python -m pip install git+https://github.com/UCL-COMP0233-23-24/assignment-submission-checker   # Fetch the latest version from GitHub
+python -m pip install git+https://github.com/UCL-COMP0233-24-25/assignment-submission-checker   # Fetch the latest version from GitHub
 ```
 
 ## Usage
+
+Once the `assignment-checker` is installed, you can invoke it from the command-line:
+
+```bash
+$ conda activate assignment-checker-environment
+(assignment-checker-environment) $ assignment-checker --help
+usage: assignment-checker [-h] [-g] [-l] [-q] [-v] [-o OUTPUT_FILE] assignment submission
+```
+
+Make sure that you have the environment you installed the `assignment-checker` into activated, otherwise you will get a command not found error.
+
+### Quick Start
+
+The basic usage of the `assignment-checker` tool is to provide it with the specifications of the assignment you plan to submit (`assignment` argument), and a local copy of your submission (`submission` argument).
+
+```bash
+(assignment-checker-environment) $ assignment-checker YYYY-XXX path/to/my/comp0233/assignment-folder
+```
+
+`YYYY-XXX` should correspond to one of the assignment specifications [found here](https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/blob/main/specs/README.md).
