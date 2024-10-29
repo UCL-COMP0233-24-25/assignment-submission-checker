@@ -34,6 +34,7 @@ extensions = [
 autosummary_generate = True
 autosectionlabel_prefix_document = True
 
+myst_heading_anchors = 4
 myst_url_schemes = ("http", "https", "mailto")
 
 templates_path = ["_templates"]

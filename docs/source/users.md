@@ -10,6 +10,13 @@
 ## Installation
 
 Users should use `pip` to install this package.
+
+```{admonition} Which Environment To Install Into?
+We recommend that you install this package into your `COMP0233` environment, and **not** into the same environment that you are working on your solution in.
+This package will install external dependencies that may conflict with those your assignment's solution requires, or install packages that your assignment should not make use of.
+If you are using the `COMP0233` environment to write your solution, consider making a separate environment for this package to be installed into.
+```
+
 This package will install dependencies that you might otherwise not have (nor want) in the environment in which you work on the assignment or classwork.
 As such, we recommand that you first create a new virtual environment using either `conda` or `anaconda`, and then install this package.
 
