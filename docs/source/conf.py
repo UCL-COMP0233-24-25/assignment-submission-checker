@@ -24,6 +24,8 @@ author = "William Graham"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+add_module_names = False
+
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
