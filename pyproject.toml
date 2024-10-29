@@ -13,8 +13,9 @@ dynamic = ["version"]
 dev = [
     "black",
     "check-manifest",
-    "myst-parser",    #https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#roles-directives
+    "myst-parser",
     "sphinx",
+    "sphinx-pdj-theme",
     "pre-commit",
     "pytest",
     "tox >= 4",

@@ -3,10 +3,6 @@
 [assignment-specs-readme]: https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/blob/main/specs/README.md
 [github-clone-feature-issue]: https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues/3
 
-```{contents} Contents
-:depth: 4
-```
-
 ## Installation
 
 Users should use `pip` to install this package.
