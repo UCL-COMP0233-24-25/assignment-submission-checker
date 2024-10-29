@@ -8,6 +8,18 @@ In-line: https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directive
 Blocks: https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#directives-a-block-level-extension-point
 -->
 
+## Contents
+
+```{toctree}
+:maxdepth: 2
+
+users
+api
+contributing
+```
+
+## About this Package
+
 `assignment-submission-checker` provides the `assignment-checker` [command-line program](./users.md#usage), in the environment it is installed into.
 It is intended to be used before you submit your work for UCL's COMP0233 module, and it will validate:
 
@@ -25,21 +37,11 @@ This ensures that any local copies of your repository are not affected by runnin
 The `assignment-checker` reads the specifications it is checking against from a file, which it needs to fetch from the internet when it is run.
 These files can be [viewed and downloaded][assignment-specs-readme] manually here, if you want to run the checker offline with the `-l` or `--local-specs` options.
 
-## Disclaimer
-
+```{admonition} Disclaimer
 The `assignment-checker` command-line program does **not** provide any reflection or indication of the grade you may receive for a submission you make.
 It only checks whether the organisational structure of your submission matches that which is laid out in the assignment guidelines, so that you can be certain that your submission conforms to said specifications prior to making your submission.
 
 Additionally, it cannot be used as evidence in the case of appeal against the grade awarded for an assignment.
-
-## Contents
-
-```{toctree}
-:maxdepth: 2
-
-users
-api
-contributing
 ```
 
 ## Indices and tables
