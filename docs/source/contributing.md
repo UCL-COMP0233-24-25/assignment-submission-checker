@@ -10,7 +10,8 @@ The `specs` folder contains `.json` specifications that the `assignment-submissi
 To add an assignment specification, simply add a file to this folder using the [naming convention](#naming-convention) outlined below.
 You can also [check the existing specifications][current-specs-folder] and use them as a template.
 
-```{admonition} Do not delete this folder!
+```{danger}
+**Do not delete this folder!**
 The `assignment-checker` needs to be able to fetch assignment specifications, and it expects to find them here.
 
 If this folder is relocated, `assignment_submission_checker.cli:ASSIGNMENT_SPEC_REFERENCES` needs to be correspondingly updated too.
@@ -59,8 +60,14 @@ This creates a nested structure of key-value entries, representative of the dire
 
 ## Reporting a Bug
 
-If you encounter a bug in the submission checker, please [open an issue][repo-issues].
-In your bug report, please include steps to replicate the bug that you encountered, plus any other relevant information such as the assignment specs you were trying to check against.
+If you encounter a bug in the submission checker, please [open an issue][repo-issues] and use the "bug report" template.
+Please fill out each section in the template with as much detail as you can provide, as this will help us fix the issue faster.
+
+## Requesting a Feature
+
+If you would like to suggest a feature to be added to the package, please [open an issue][repo-issues] and use the "feature request" template.
+Please take the time to fill out each of the sections in the template, and be as clear as possible.
+The maintainers will review your feature request at their earliest opportunity, however you can always open a PR [to contribute](#contributing-code) the feature yourself.
 
 ## Contributing Code
 
@@ -69,6 +76,37 @@ Once your pull request is ready, please tag `@UCL-COMP0233-24-25/comp0233-admin`
 You can speed up the process by including a helpful title and description in your pull request, and linking to any relevant issues that your pull request addresses.
 
 If you are planning to contribute code, you might also want to take a look at our [API Reference](./api.md) to familiarise yourself with the codebase.
+
+### Developer Install
+
+If you are planning to contribute to this repository, we recommend you install this package with it's optional `dev` dependency, and using an editable install.
+To do so using `pip`;
+
+1. Clone (your fork of) this repository locally.
+2. Open a terminal in the repository root.
+3. Create a new environment for developing this package.
+4. Run `pip install -e .[dev]` to install the package in editable mode, and fetch the optional dependencies.
+
+### Pre-commit
+
+This repository uses [pre-commit](https://pre-commit.com/) to format files tracked by the repository, which is included in the `[dev]` optional dependencies.
+Once you have installed pre-commit in your developer environment, run
+
+```bash
+pre-commit install
+```
+
+to initialise pre-commit for this project.
+This will ensure that all the pre-commit checks run after you try and make a commit, and it will flag any issues with your formatting.
+The hook will also attempt to fix any mistakes it finds, though you will need to `git add` these changes before you commit again.
+
+Once pre-commit is installed, you can also run
+
+```bash
+pre-commit run -a
+```
+
+to run pre-commit across all files in the repository at any time.
 
 ## Building the Documentation
 
