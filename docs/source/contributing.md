@@ -90,3 +90,11 @@ Once you have installed the requirements, navigate to the repository root direct
 
 to build the documentation (in `html` format), with the output being placed into `docs/build`.
 You can then view the documentation by opening the created `html` files inside a browser.
+
+### Markdown vs RST
+
+The documentation is written in Markdown and then uses `myst-parser` to translate this into `rst` format that Sphinx can interpret.
+You can still use `rst` directives in Markdown files, and the `myst-parser` documentation contains a guide on how to do so:
+
+- [To translate in-line directives.](https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#roles-an-in-line-extension-point)
+- [To translate block directives.](https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#directives-a-block-level-extension-point)

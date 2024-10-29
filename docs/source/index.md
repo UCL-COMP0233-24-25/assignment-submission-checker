@@ -2,14 +2,6 @@
 
 [assignment-specs-readme]: https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/blob/main/specs/README.md
 
-<!-- 
-Translating rst directives to markdown:
-In-line: https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#roles-an-in-line-extension-point
-Blocks: https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#directives-a-block-level-extension-point
--->
-
-## Contents
-
 ```{toctree}
 :maxdepth: 2
 
