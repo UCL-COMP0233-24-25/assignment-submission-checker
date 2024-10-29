@@ -1,9 +1,6 @@
 # Assignment Specifications
 
-This folder contains `.json` specifications that the `assignment-submission-checker` package requires when validating submissions.
-
-Do not delete this folder.
-If this folder is relocated, `assignment_submission_checker.cli:ASSIGNMENT_SPEC_REFERENCES` needs to be correspondingly updated too.
+You can read the full details in the [developer docs](https://ucl-comp0233-24-25.github.io/assignment-submission-checker/contributing.html#adding-an-assignment-configuration).
 
 ## Explicit List of Files
 
