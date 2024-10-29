@@ -89,6 +89,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#adding-an-assignment-configuration">Adding an Assignment Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reporting-a-bug">Reporting a Bug</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requesting-a-feature">Requesting a Feature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#contributing-code">Contributing Code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#building-the-documentation">Building the Documentation</a></li>
 </ul>
@@ -143,9 +144,10 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">specs</span></code> folder contains <code class="docutils literal notranslate"><span class="pre">.json</span></code> specifications that the <code class="docutils literal notranslate"><span class="pre">assignment-submission-checker</span></code> package requires when validating submissions.
 To add an assignment specification, simply add a file to this folder using the <a class="reference internal" href="#naming-convention">naming convention</a> outlined below.
 You can also <a class="reference external" href="https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/tree/main/specs">check the existing specifications</a> and use them as a template.</p>
-<div class="admonition-do-not-delete-this-folder admonition">
-<p class="admonition-title">Do not delete this folder!</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> needs to be able to fetch assignment specifications, and it expects to find them here.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p><strong>Do not delete this folder!</strong>
+The <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> needs to be able to fetch assignment specifications, and it expects to find them here.</p>
 <p>If this folder is relocated, <code class="docutils literal notranslate"><span class="pre">assignment_submission_checker.cli:ASSIGNMENT_SPEC_REFERENCES</span></code> needs to be correspondingly updated too.</p>
 </div>
 <section id="naming-convention">
@@ -192,8 +194,14 @@ This creates a nested structure of key-value entries, representative of the dire
 </section>
 <section id="reporting-a-bug">
 <h2>Reporting a Bug<a class="headerlink" href="#reporting-a-bug" title="Link to this heading">¶</a></h2>
-<p>If you encounter a bug in the submission checker, please <a class="reference external" href="https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues">open an issue</a>.
-In your bug report, please include steps to replicate the bug that you encountered, plus any other relevant information such as the assignment specs you were trying to check against.</p>
+<p>If you encounter a bug in the submission checker, please <a class="reference external" href="https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues">open an issue</a> and use the “bug report” template.
+Please fill out each section in the template with as much detail as you can provide, as this will help us fix the issue faster.</p>
+</section>
+<section id="requesting-a-feature">
+<h2>Requesting a Feature<a class="headerlink" href="#requesting-a-feature" title="Link to this heading">¶</a></h2>
+<p>If you would like to suggest a feature to be added to the package, please <a class="reference external" href="https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues">open an issue</a> and use the “feature request” template.
+Please take the time to fill out each of the sections in the template, and be as clear as possible.
+The maintainers will review your feature request at their earliest opportunity, however you can always open a PR <a class="reference internal" href="#contributing-code">to contribute</a> the feature yourself.</p>
 </section>
 <section id="contributing-code">
 <h2>Contributing Code<a class="headerlink" href="#contributing-code" title="Link to this heading">¶</a></h2>
@@ -201,6 +209,33 @@ In your bug report, please include steps to replicate the bug that you encounter
 Once your pull request is ready, please tag <code class="docutils literal notranslate"><span class="pre">&#64;UCL-COMP0233-24-25/comp0233-admin</span></code> for review, and a member of the team will review your pull request at their earliest convenience.
 You can speed up the process by including a helpful title and description in your pull request, and linking to any relevant issues that your pull request addresses.</p>
 <p>If you are planning to contribute code, you might also want to take a look at our <a class="reference internal" href="api.html"><span class="std std-doc">API Reference</span></a> to familiarise yourself with the codebase.</p>
+<section id="developer-install">
+<h3>Developer Install<a class="headerlink" href="#developer-install" title="Link to this heading">¶</a></h3>
+<p>If you are planning to contribute to this repository, we recommend you install this package with it’s optional <code class="docutils literal notranslate"><span class="pre">dev</span></code> dependency, and using an editable install.
+To do so using <code class="docutils literal notranslate"><span class="pre">pip</span></code>;</p>
+<ol class="arabic simple">
+<li><p>Clone (your fork of) this repository locally.</p></li>
+<li><p>Open a terminal in the repository root.</p></li>
+<li><p>Create a new environment for developing this package.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[dev]</span></code> to install the package in editable mode, and fetch the optional dependencies.</p></li>
+</ol>
+</section>
+<section id="pre-commit">
+<h3>Pre-commit<a class="headerlink" href="#pre-commit" title="Link to this heading">¶</a></h3>
+<p>This repository uses <a class="reference external" href="https://pre-commit.com/">pre-commit</a> to format files tracked by the repository, which is included in the <code class="docutils literal notranslate"><span class="pre">[dev]</span></code> optional dependencies.
+Once you have installed pre-commit in your developer environment, run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>install
+</pre></div>
+</div>
+<p>to initialise pre-commit for this project.
+This will ensure that all the pre-commit checks run after you try and make a commit, and it will flag any issues with your formatting.
+The hook will also attempt to fix any mistakes it finds, though you will need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> these changes before you commit again.</p>
+<p>Once pre-commit is installed, you can also run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>run<span class="w"> </span>-a
+</pre></div>
+</div>
+<p>to run pre-commit across all files in the repository at any time.</p>
+</section>
 </section>
 <section id="building-the-documentation">
 <h2>Building the Documentation<a class="headerlink" href="#building-the-documentation" title="Link to this heading">¶</a></h2>

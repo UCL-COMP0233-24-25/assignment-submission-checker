@@ -29,7 +29,9 @@ This ensures that any local copies of your repository are not affected by runnin
 The `assignment-checker` reads the specifications it is checking against from a file, which it needs to fetch from the internet when it is run.
 These files can be [viewed and downloaded][assignment-specs-readme] manually here, if you want to run the checker offline with the `-l` or `--local-specs` options.
 
-```{admonition} Disclaimer
+```{attention}
+**Disclaimer**
+
 The `assignment-checker` command-line program does **not** provide any reflection or indication of the grade you may receive for a submission you make.
 It only checks whether the organisational structure of your submission matches that which is laid out in the assignment guidelines, so that you can be certain that your submission conforms to said specifications prior to making your submission.
 
