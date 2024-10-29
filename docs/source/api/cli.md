@@ -27,7 +27,7 @@ The `cli_main` module contains the function that actually runs the validation wo
 
 This function is deliberately separated from the command-line interface [entry function](#entry-function) to allow the validation workflow to be run from within Python scripts and workflows directly, without the need to open a subprocess and delegate to the shell.
 
-The only other function in this module is the `fetch_spec` function, which handles fetching [assignment specifications](../contributing.md) from the GitHub repository.
+The only other function in this module is the `fetch_spec` function, which handles fetching [assignment specifications](../contributing.md#adding-an-assignment-configuration) from the GitHub repository.
 
 ```{eval-rst}
 .. autofunction:: assignment_submission_checker.cli_main.fetch_spec
