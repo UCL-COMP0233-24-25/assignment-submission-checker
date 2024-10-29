@@ -4,10 +4,6 @@
 [repo-issues]: https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues
 [sphinx]: https://www.sphinx-doc.org/en/master/
 
-```{contents} Contents
-:depth: 2
-```
-
 ## Adding an Assignment Configuration
 
 The `specs` folder contains `.json` specifications that the `assignment-submission-checker` package requires when validating submissions.
