@@ -10,7 +10,15 @@ dependencies = ["GitPython", "requests"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["black", "check-manifest", "pre-commit", "pytest", "tox >= 4"]
+dev = [
+    "black",
+    "check-manifest",
+    "myst-parser",    #https://myst-parser.readthedocs.io/en/latest/syntax/roles-and-directives.html#roles-directives
+    "sphinx",
+    "pre-commit",
+    "pytest",
+    "tox >= 4",
+]
 
 [project.scripts]
 assignment-checker = "assignment_submission_checker.cli:cli"
