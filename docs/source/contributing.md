@@ -10,7 +10,8 @@ The `specs` folder contains `.json` specifications that the `assignment-submissi
 To add an assignment specification, simply add a file to this folder using the [naming convention](#naming-convention) outlined below.
 You can also [check the existing specifications][current-specs-folder] and use them as a template.
 
-```{admonition} Do not delete this folder!
+```{danger}
+**Do not delete this folder!**
 The `assignment-checker` needs to be able to fetch assignment specifications, and it expects to find them here.
 
 If this folder is relocated, `assignment_submission_checker.cli:ASSIGNMENT_SPEC_REFERENCES` needs to be correspondingly updated too.
