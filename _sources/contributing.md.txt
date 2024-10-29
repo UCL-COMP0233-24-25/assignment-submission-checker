@@ -4,10 +4,6 @@
 [repo-issues]: https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/issues
 [sphinx]: https://www.sphinx-doc.org/en/master/
 
-```{contents} Contents
-:depth: 2
-```
-
 ## Adding an Assignment Configuration
 
 The `specs` folder contains `.json` specifications that the `assignment-submission-checker` package requires when validating submissions.
@@ -79,7 +75,7 @@ If you are planning to contribute code, you might also want to take a look at ou
 The documentation is built [using `Sphinx`][sphinx] and deployed via GitHub actions whenever a push to `main` occurs.
 The documentation is also built for each PR branch against `main`, however these builds are not deployed.
 
-To build the docs locally, ensure that you have both `sphinx` and `myst-parser` installed in your developer environment.
+To build the docs locally, ensure that you have both `sphinx`, `myst-parser`, and `sphinx-pdj-theme` installed in your developer environment.
 Alternatively, you can install this package with its developer (`dev`) optional requirements, which will fetch the two aforementioned packages.
 
 Once you have installed the requirements, navigate to the repository root directory and run
