@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: website_html_${{ github.sha }}
-          path: docs/build/*
+          path: docs/build/html/*
           retention-days: 1
 
   # Only deploy the website when the workflow was triggered on main
