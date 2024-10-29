@@ -31,7 +31,7 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
-      - name: Install Python requirements 
+      - name: Install Python requirements
         run: pip install .[dev]
 
       - name: Build website from profiling results

@@ -51,8 +51,8 @@ Don't forget to run these in the same conda environment as you originally instal
 
 ```bash
 # Uninstall the old version, if you have it installed
-(assignment-checker-environment) $ python -m pip uninstall assignment-submission-checker       
-# Fetch the latest version from GitHub                                    
+(assignment-checker-environment) $ python -m pip uninstall assignment-submission-checker
+# Fetch the latest version from GitHub
 (assignment-checker-environment) $ python -m pip install git+https://github.com/UCL-COMP0233-24-25/assignment-submission-checker
 ```
 
