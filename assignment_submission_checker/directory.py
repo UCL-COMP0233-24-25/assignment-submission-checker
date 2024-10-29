@@ -491,8 +491,8 @@ class Directory:
 
         If self.variable_name is False, the directory_name must match self.name.
         If self.variable_name is True:
-            - If self.variable_name_match is None, take the name provided as a match.
-            - Otherwise, the directory_name must match the shell expression given in self.variable_name_match.
+        - If self.variable_name_match is None, take the name provided as a match.
+        - Otherwise, the directory_name must match the shell expression given in self.variable_name_match.
 
         In the case of a variable name and a matching directory name, the self.name
         property will be set to the matched value.

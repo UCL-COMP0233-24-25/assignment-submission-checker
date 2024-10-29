@@ -1,0 +1,73 @@
+name: Build and Deploy Website
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  deployments: write
+  contents: write
+
+concurrency:
+  # Skip build if a new build is triggered by new updates
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_website:
+    name: Build profiling website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4.6.1
+        with:
+          python-version: '3.10'
+
+      - name: Install Python requirements
+        run: pip install .[dev]
+
+      - name: Build website from profiling results
+        run: sphinx-build -M html docs/source docs/build
+
+      - name: Upload the generated HTML
+        uses: actions/upload-artifact@v3
+        with:
+          name: website_html_${{ github.sha }}
+          path: docs/build/html/*
+          retention-days: 1
+
+  # Only deploy the website when the workflow was triggered on main
+  # This allows the previous two jobs to be used as checks against PRs
+  deploy-website:
+    name: Deploy pages site
+    runs-on: ubuntu-latest
+    needs: [build_website]
+    if: github.ref_name == 'main' || github.event_name == 'repository_dispatch'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch profiling results html
+        uses: actions/download-artifact@v3
+        with:
+          name: website_html_${{ github.sha }}
+          path: build/
+
+      # .nojekyll ensures GH pages with underscores work
+      - name: Create .nojekyll
+        run: touch build/.nojekyll
+        shell: bash
+
+      - name: Deploy website
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+          branch: gh-pages
+          clean: True
