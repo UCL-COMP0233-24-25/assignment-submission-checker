@@ -1,23 +1,18 @@
 ---
 name: Feature Request
-about: Report a bug you've found in the package.
-title: "[BUG]"
-labels: "bug"
+about: Describe a feature you'd like to see implemented.
+title: "[FEATURE]"
+labels: "enhancement"
 ---
 
 ## Description
 
-<!-- Describe the bug here. Be sure to include:
-- What you were trying to do.
-- Which features / parts of the package you were using.
-- What you expected to happen.
-- What actually happened.
- -->
+### What is this feature?
 
-## Minimal Steps to Reproduce
+Describe what the feature should be, how it should work, and what it should produce.
 
-<!-- If you can, please include here a minimal sequence of steps that will allow us to reproduce the bug. -->
+Include an example use-case for the feature, and potential mock-ups of the API / function calls necessary to use it.
 
-## Desired Outcome
+### Why is this feature needed?
 
-<!-- Describe what you think should be happening, or what you would like to happen, to fix this bug. -->
+Explain why the package would benefit from this feature being implemented.
