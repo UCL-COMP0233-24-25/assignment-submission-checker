@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The Directory Class &#8212; Assignment Submission Checker  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Miscellaneous Git Functions" href="git-utils.html" />
+    <link rel="prev" title="Command-Line Interface" href="cli.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="the-directory-class">
+<h1>The Directory Class<a class="headerlink" href="#the-directory-class" title="Link to this heading">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">Directory</span></code> class allows us to compare a directory on the filesystem to a representation of a directory structure that we expect to be present.
+A <code class="docutils literal notranslate"><span class="pre">Directory</span></code> instance stores a list of further <code class="docutils literal notranslate"><span class="pre">Directory</span></code> instances that implicitly encode its subdirectories - this results in the majority of class methods invoking some form of recursion to check compatibility or equality (amongst other things).</p>
+<p><code class="docutils literal notranslate"><span class="pre">Directory</span></code>s also contain metadata from the assignment specifications about which files (or types of files) they should contain, whether they should be the root of a git repository, and whether their name can be variable.
+A top-level <code class="docutils literal notranslate"><span class="pre">Directory</span></code> is typically identified when the <code class="docutils literal notranslate"><span class="pre">parent</span></code> attribute is <code class="docutils literal notranslate"><span class="pre">None</span></code>; the <code class="docutils literal notranslate"><span class="pre">Assignment.structure</span></code> property of <a class="reference internal" href="assignment.html"><span class="std std-doc">the <code class="docutils literal notranslate"><span class="pre">Assignment</span></code> class</span></a> typically makes such a <code class="docutils literal notranslate"><span class="pre">Directory</span></code> instance.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory_structure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#assignment_submission_checker.directory.Directory" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_against_directory">
+<span class="sig-name descname"><span class="pre">check_against_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">substitutes_for_main_branch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils.html#assignment_submission_checker.utils.AssignmentCheckerError" title="assignment_submission_checker.utils.AssignmentCheckerError"><span class="pre">AssignmentCheckerError</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_against_directory" title="Link to this definition">¶</a></dt>
+<dd><p>Given a directory on the machine, determine if the contents of the directory are compatible with
+the expected setup of this Directory instance.</p>
+<p>This method will check (in order):</p>
+<ul class="simple">
+<li><p>If the given directory exists on the machine.</p></li>
+<li><dl class="simple">
+<dt>Check the name of the given directory against self.name.</dt><dd><ul>
+<li><p>If self.variable_name, then infer the variable name (possibly throwing warnings to the user).</p></li>
+<li><p>Otherwise, confirm that the directory name matches self.name.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Check if the directory is the git root.</dt><dd><ul>
+<li><p>If self.git_root is False, confirm the directory is not a git repository, then skip these steps.</p></li>
+<li><dl class="simple">
+<dt>Otherwise;</dt><dd><ul>
+<li><p>Determine if a git repo is present at the given directory.</p></li>
+<li><p>Determine if the working tree is clean.</p></li>
+<li><p>Attempt to switch to the marking branch (main).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Check the files are present in the directory.</dt><dd><ul>
+<li><p>Check that all compulsory files are present in the directory.</p></li>
+<li><p>Check that there are no unexpected files in the directory.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Delegate the checking process to the subdirectories of this Directory instance.</p></li>
+</ul>
+<p>During this process, the checking algorithm may encounter FATAL errors, or WARNINGS.</p>
+<dl class="simple">
+<dt>FATAL errors make subsequent steps in the algorithm impossible:</dt><dd><ul class="simple">
+<li><p>When the directory does not exist on the filesystem.</p></li>
+<li><p>When the name of the directory given does not match the fixed name of this instance.</p></li>
+<li><p>When this directory should be a git repository, but is not.</p></li>
+<li><p>When there are untracked changes within a git repository.</p></li>
+<li><p>When there are uncommitted changes within a git repository.</p></li>
+<li><p>When switching to <cite>main</cite> or another acceptable branch is impossible.</p></li>
+<li><p>When a reference could not be checked out in the repository.</p></li>
+<li><p>When a git repository is present in a directory that should not be a repository.</p></li>
+<li><p>When a compulsory subdirectory is not present.</p></li>
+<li><p>When a compulsory subdirectory with a variable name cannot be matched to a folder on the filesystem.</p></li>
+</ul>
+</dd>
+<dt>WARNINGs report errors in the submission, but which do not force the algorithm to halt:</dt><dd><ul class="simple">
+<li><p>If the repository was not on <cite>main</cite> branch when submitted.</p></li>
+<li><p>If the repository does not have a <cite>main</cite> branch, but an alternative was identified &amp; successfully checked out (EG <cite>master</cite>).</p></li>
+<li><p>If compulsory files are missing from the directory.</p></li>
+<li><p>If unexpected files are missing from the directory.</p></li>
+</ul>
+</dd>
+<dt>INFORMATION reports on other misc information obtained during the algorithm:</dt><dd><ul class="simple">
+<li><p>When optional files, or data files, are identified in a directory.</p></li>
+<li><p>When a directory with a variable name is matched to a folder on the filesystem.</p></li>
+<li><p>When optional folders are not found within the submission.</p></li>
+<li><p>When optional subfolders with variable names are not matched to a folder on the filesystem.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns the following values, in the order given, as a tuple:</p>
+<ol class="arabic simple">
+<li><p>An AssignmentCheckerError instance that reports the FATAL error encountered. This value is None if no FATAL errors were encountered.</p></li>
+<li><p>A list of strings that contain the text to be issued by WARNINGs that the algorithm wants to issue.</p></li>
+<li><p>A list of strings that contain the text to be issued as INFORMATION.</p></li>
+</ol>
+<p>Note that if the first return value is None, and the second is an empty list, then the Directory instance is
+compatible with the directory on the filesystem that was passed in.</p>
+<p><cite>do_not_set_name</cite> can be set to True to prevent variable-named folders from inheriting the pattern-matched
+name from the filesystem. This is exclusively used when attempting to match variable-named subdirectories
+to those on the filesystem.</p>
+<p><cite>substitutes_for_main_branch</cite> should be a sequence of branch names that, if <cite>main</cite> is not present in
+the expected git repository, will be used instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_files">
+<span class="sig-name descname"><span class="pre">check_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_files" title="Link to this definition">¶</a></dt>
+<dd><p>Check the files that are present in the directory, returning:</p>
+<ol class="arabic simple">
+<li><p>A list of compulsory files that are missing.</p></li>
+<li><p>A list of files that were not expected to be found.</p></li>
+<li><p>A list of optional files that were found.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_git_repo">
+<span class="sig-name descname"><span class="pre">check_git_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">allowable_other_branches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils.html#assignment_submission_checker.utils.AssignmentCheckerError" title="assignment_submission_checker.utils.AssignmentCheckerError"><span class="pre">AssignmentCheckerError</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_git_repo" title="Link to this definition">¶</a></dt>
+<dd><p>Check whether the folder on the filesystem is (or is not) a git repository, as expected by the instance.</p>
+<p>The method returns two values, in the following order.</p>
+<p>1. An AssignmentCheckerError (corresponding to a FATAL error in check_directories)
+in the following cases (otherwise None):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The instance expects a git repository on the filesystem, but does not detect one.</p></li>
+<li><dl class="simple">
+<dt>The instance expects a git repository on the filesystem, and a repository is present but…</dt><dd><ul>
+<li><p>There are untracked files in the repository.</p></li>
+<li><p>There are unstaged changes to files in the repository.</p></li>
+<li><p>There are uncommitted changes in the repository.</p></li>
+<li><p>The repository could not checkout <cite>main</cite> or another of the <cite>allowable_other_branches</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>The instance does not expect a git repository on the filesystem, but there is one.</p></li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><dl class="simple">
+<dt>A string containing WARNING information, that can be passed back to <cite>check_directories</cite>.</dt><dd><ul class="simple">
+<li><p>None is returned if there are no warnings to record.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_name">
+<span class="sig-name descname"><span class="pre">check_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_name" title="Link to this definition">¶</a></dt>
+<dd><p>Check that the directory name given is compatible with this instance.</p>
+<p>If self.variable_name is False, the directory_name must match self.name.
+If self.variable_name is True:
+- If self.variable_name_match is None, take the name provided as a match.
+- Otherwise, the directory_name must match the shell expression given in self.variable_name_match.</p>
+<p>In the case of a variable name and a matching directory name, the self.name
+property will be set to the matched value.
+This can be suppressed using the do_not_set_name input.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.compulsory">
+<span class="sig-name descname"><span class="pre">compulsory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.compulsory" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.data_file_patterns">
+<span class="sig-name descname"><span class="pre">data_file_patterns</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.data_file_patterns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.fixed_name_subdirs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fixed_name_subdirs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.fixed_name_subdirs" title="Link to this definition">¶</a></dt>
+<dd><p>Subdirectories of this Directory that do not have variable names.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.git_root">
+<span class="sig-name descname"><span class="pre">git_root</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.git_root" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.investigate_subdir">
+<span class="sig-name descname"><span class="pre">investigate_subdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils.html#assignment_submission_checker.utils.AssignmentCheckerError" title="assignment_submission_checker.utils.AssignmentCheckerError"><span class="pre">AssignmentCheckerError</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.investigate_subdir" title="Link to this definition">¶</a></dt>
+<dd><p>Essentially wraps check_directory when called on a subdirectory on the instance.
+This has utility within check_directory() as we can refactor out the body of two <cite>for</cite> loops
+into this function;
+- When we investigate subdirectories with fixed names,
+- When we investigate subdirectories with variable names,
+after having matched these to folders on the filesystem.</p>
+<p>Note that <cite>path_to_subdir</cite> should point to the folder that is to be compared to <cite>subdir</cite>, unlike
+its counterpart in <cite>check_directories</cite> where <cite>directory</cite> points to the folder that is being compared to <cite>self</cite>.</p>
+<p>The returned values, and remaining arguments, are identical to those of <cite>check_directory</cite>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.is_data_dir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_data_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.is_data_dir" title="Link to this definition">¶</a></dt>
+<dd><p>Whether this directory is a ‘data directory’, that may contain data files with user-defined names.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.is_optional">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_optional</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.is_optional" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True if the directory is an optional inclusion in the submission,
+and returns False otherwise.</p>
+<p>A directory is optional if it contains no compulsory files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.match_variable_name_subdirs">
+<span class="sig-name descname"><span class="pre">match_variable_name_subdirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.match_variable_name_subdirs" title="Link to this definition">¶</a></dt>
+<dd><p>Handles cases where an instance has (potentially multiple) subdirectories
+that have variable names, meaning that we have to attempt to match directories
+based on their structure, not their names alone.</p>
+<p>The method will attempt to match compulsory directories first, before attempting
+to match optional directories (if any exist).</p>
+<p>The method returns two values, in the following order:</p>
+<ol class="arabic simple">
+<li><p>A dictionary whose keys are the names of the subdirectories on the filesystem, and whose values are the Directory instances within self.subdirs that these match to.</p></li>
+<li><p>A list of Directories in self.subdirs that were not matched to directories on the filesystem.</p></li>
+</ol>
+<p>Note that the second return value potentially includes optional subdirectories.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.name_pattern">
+<span class="sig-name descname"><span class="pre">name_pattern</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.name_pattern" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.optional">
+<span class="sig-name descname"><span class="pre">optional</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.optional" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.parent">
+<span class="sig-name descname"><span class="pre">parent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.parent" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.path_from_root">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">path_from_root</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.path_from_root" title="Link to this definition">¶</a></dt>
+<dd><p>Path to this directory, from the root of the directory tree.</p>
+<p>If self.parent = None, this Directory is assumed to be the root of the tree.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.subdirs">
+<span class="sig-name descname"><span class="pre">subdirs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.subdirs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.traverse">
+<span class="sig-name descname"><span class="pre">traverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.traverse" title="Link to this definition">¶</a></dt>
+<dd><p>Traverse down the directory tree, yielding self first then descending into subdirectories.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.variable_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variable_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.variable_name" title="Link to this definition">¶</a></dt>
+<dd><p>Whether this instance needs to match a name pattern.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.variable_name_subdirs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variable_name_subdirs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#assignment_submission_checker.directory.Directory.variable_name_subdirs" title="Link to this definition">¶</a></dt>
+<dd><p>Subdirectories of this Directory that have variable names.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Assignment Submission Checker</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../users.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="assignment.html">The <code class="docutils literal notranslate"><span class="pre">Assignment</span></code> Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-Line Interface</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">The Directory Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git-utils.html">Miscellaneous Git Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utility Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">API Reference</a><ul>
+      <li>Previous: <a href="cli.html" title="previous chapter">Command-Line Interface</a></li>
+      <li>Next: <a href="git-utils.html" title="next chapter">Miscellaneous Git Functions</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, William Graham.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/api/directory.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
