@@ -60,8 +60,14 @@ This creates a nested structure of key-value entries, representative of the dire
 
 ## Reporting a Bug
 
-If you encounter a bug in the submission checker, please [open an issue][repo-issues].
-In your bug report, please include steps to replicate the bug that you encountered, plus any other relevant information such as the assignment specs you were trying to check against.
+If you encounter a bug in the submission checker, please [open an issue][repo-issues] and use the "bug report" template.
+Please fill out each section in the template with as much detail as you can provide, as this will help us fix the issue faster.
+
+## Requesting a Feature
+
+If you would like to suggest a feature to be added to the package, please [open an issue][repo-issues] and use the "feature request" template.
+Please take the time to fill out each of the sections in the template, and be as clear as possible.
+The maintainers will review your feature request at their earliest opportunity, however you can always open a PR [to contribute](#contributing-code) the feature yourself.
 
 ## Contributing Code
 
