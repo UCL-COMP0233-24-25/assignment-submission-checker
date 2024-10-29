@@ -77,6 +77,37 @@ You can speed up the process by including a helpful title and description in you
 
 If you are planning to contribute code, you might also want to take a look at our [API Reference](./api.md) to familiarise yourself with the codebase.
 
+### Developer Install
+
+If you are planning to contribute to this repository, we recommend you install this package with it's optional `dev` dependency, and using an editable install.
+To do so using `pip`;
+
+1. Clone (your fork of) this repository locally.
+2. Open a terminal in the repository root.
+3. Create a new environment for developing this package.
+4. Run `pip install -e .[dev]` to install the package in editable mode, and fetch the optional dependencies.
+
+### Pre-commit
+
+This repository uses [pre-commit](https://pre-commit.com/) to format files tracked by the repository, which is included in the `[dev]` optional dependencies.
+Once you have installed pre-commit in your developer environment, run
+
+```bash
+pre-commit install
+```
+
+to initialise pre-commit for this project.
+This will ensure that all the pre-commit checks run after you try and make a commit, and it will flag any issues with your formatting.
+The hook will also attempt to fix any mistakes it finds, though you will need to `git add` these changes before you commit again.
+
+Once pre-commit is installed, you can also run
+
+```bash
+pre-commit run -a
+```
+
+to run pre-commit across all files in the repository at any time.
+
 ## Building the Documentation
 
 The documentation is built [using `Sphinx`][sphinx] and deployed via GitHub actions whenever a push to `main` occurs.
