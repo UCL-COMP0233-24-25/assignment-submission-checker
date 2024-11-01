@@ -6,7 +6,7 @@
         "git-root": true,
         "compulsory": [
             "country.py",
-            "execution_times.py",
+            "execution_time.py",
             "test_country.py",
             "utilities.py"
         ],
