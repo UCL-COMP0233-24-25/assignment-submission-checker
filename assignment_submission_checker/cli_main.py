@@ -11,8 +11,7 @@ from assignment_submission_checker.utils import provide_tmp_directory
 ASSIGNMENT_SPEC_REFERENCES = (
     "https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/tree/main/specs"
 )
-# GH_RAW_FETCH = "https://raw.githubusercontent.com/UCL-COMP0233-24-25/assignment-submission-checker/refs/heads/main/specs"
-GH_RAW_FETCH = "https://raw.githubusercontent.com/UCL-COMP0233-24-25/assignment-submission-checker/refs/heads/switch-to-json-specs/specs"
+GH_RAW_FETCH = "https://raw.githubusercontent.com/UCL-COMP0233-24-25/assignment-submission-checker/refs/heads/main/specs"
 
 
 def fetch_spec(assignment_spec: str) -> None:
