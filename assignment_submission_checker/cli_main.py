@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from tempfile import mkdtemp
 from typing import Optional
@@ -31,6 +32,13 @@ def fetch_spec(assignment_spec: str) -> None:
     return r.text
 
 
+def infer_repo_name(repo: Repo) -> str:
+    """
+    Attempt to infer the name of a repository cloned from GitHub.
+    """
+    return repo.remotes.origin.url.split(".git")[0].split("/")[-1]
+
+
 def main(
     assignment_lookup: Optional[str] = None,
     github_clone_url: Optional[str] = None,
@@ -51,10 +59,20 @@ def main(
     if github_clone_url is not None:
         # Attempt to clone GH repo and place into temp folder
         # then set that as the submission directory
-        submission_dir = Path(mkdtemp("safe_clone"))
+        tmp_dir = Path(mkdtemp("safe_clone"))
+        clone_dir = tmp_dir / "cloned"
+        clone_dir.mkdir(exist_ok=True)
+
         # Actually clone the repo from GH so it is available on the filesystem
-        r = Repo.clone_from(github_clone_url, to_path=submission_dir)
+        r = Repo.clone_from(github_clone_url, to_path=clone_dir)
+        repo_name = infer_repo_name(r)
         r.close()
+
+        # Relocate the cloned repository deeper inside another temporary folder, so that
+        # names match up with those expected.
+        submission_dir = tmp_dir / repo_name
+        shutil.move(clone_dir, submission_dir)
+
     elif submission is not None:
         submission_dir = Path(submission)
     else:
