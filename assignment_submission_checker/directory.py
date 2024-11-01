@@ -530,12 +530,14 @@ class Directory:
 
         if not path_to_subdir.is_dir():
             if subdir.is_optional:
-                information.append(f"Optional subfolder {subdir.name} of {self.name} not found.")
+                information.append(
+                    f"Optional subfolder '{subdir.name}' of '{self.name}' not found."
+                )
                 return None, warning, information
             else:
                 return (
                     AssignmentCheckerError(
-                        f"Expected subdirectory {subdir.name} to be present in {self.name}, but it is not."
+                        f"Expected subdirectory '{subdir.name}' to be present in '{self.name}', but it is not."
                     ),
                     warning,
                     information,

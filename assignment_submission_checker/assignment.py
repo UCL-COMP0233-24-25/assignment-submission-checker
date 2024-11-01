@@ -166,7 +166,7 @@ class Assignment:
                 "Information reported here does not invalidate the submission, "
                 "though you may wish to check you expect everything here to apply "
                 "to your submission.\n\t"
-            ) + "\n".join(s.replace("\n", "\n\t") for s in information)
+            ) + "\n\t".join(s.replace("\n", "\n\t") for s in information)
 
         if (not fatal_str) and (not warnings_str) and (not information_str):
             return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
