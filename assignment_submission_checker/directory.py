@@ -404,11 +404,10 @@ class Directory:
             file for pattern in self.data_file_patterns for file in fnmatch.filter(files, pattern)
         )
         unexpected = files - set(self.compulsory) - set(self.optional) - data_files
+        git_files = set()
         if self.git_root:
             # Do not report git files as unexpected if we're at the git root.
             # Add these as optionals
-            git_files = set()
-
             for file in unexpected:
                 if any(fnmatch(file.lower(), pattern.lower()) for pattern in GIT_ROOT_PATTERNS):
                     git_files.add(file)
