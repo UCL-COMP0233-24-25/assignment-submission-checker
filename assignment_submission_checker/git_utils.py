@@ -6,6 +6,15 @@ import git
 
 from .utils import AssignmentCheckerError
 
+GIT_ROOT_PATTERNS = [
+    "README*",
+    "LICENSE*",
+    "*.ini",
+    "*.in",
+    "*.yaml",
+    ".gitignore",
+]
+
 
 def is_clean(
     repo: git.Repo, boolean_output: bool = False

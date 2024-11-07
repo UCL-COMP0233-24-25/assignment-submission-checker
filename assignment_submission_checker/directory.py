@@ -7,7 +7,12 @@ from typing import Any, Dict, Generator, Iterator, List, Optional, Set, Tuple, T
 
 import git
 
-from .git_utils import is_clean, is_git_repo, switch_to_main_if_possible
+from .git_utils import (
+    GIT_ROOT_PATTERNS,
+    is_clean,
+    is_git_repo,
+    switch_to_main_if_possible,
+)
 from .utils import AssignmentCheckerError, match_to_unique_assignments
 
 DirectoryDict: TypeAlias = Dict[str, Any]
@@ -44,13 +49,6 @@ class Directory:
         Subdirectories of this Directory that do not have variable names.
         """
         return [s for s in self.subdirs if not s.variable_name]
-
-    @property
-    def is_data_dir(self) -> bool:
-        """
-        Whether this directory is a 'data directory', that may contain data files with user-defined names.
-        """
-        return bool(self.data_file_patterns)
 
     @property
     def is_optional(self) -> bool:
@@ -406,8 +404,18 @@ class Directory:
             file for pattern in self.data_file_patterns for file in fnmatch.filter(files, pattern)
         )
         unexpected = files - set(self.compulsory) - set(self.optional) - data_files
+        if self.git_root:
+            # Do not report git files as unexpected if we're at the git root.
+            # Add these as optionals
+            git_files = set()
 
-        optional = files - unexpected - set(self.compulsory)
+            for file in unexpected:
+                if any(fnmatch(file.lower(), pattern.lower()) for pattern in GIT_ROOT_PATTERNS):
+                    git_files.add(file)
+
+            unexpected = unexpected - git_files
+
+        optional = files - unexpected - set(self.compulsory) + git_files
 
         return missing_compulsory, unexpected, optional
 

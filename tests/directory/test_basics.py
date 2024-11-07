@@ -14,7 +14,6 @@ def test_init(template_directory: Directory):
     assert not template_directory.optional
     assert not template_directory.is_optional
     assert not template_directory.data_file_patterns
-    assert not template_directory.is_data_dir
     assert template_directory.variable_name
     assert template_directory.path_from_root == Path(".")
     assert len(template_directory.subdirs) == 1
@@ -35,7 +34,6 @@ def test_init(template_directory: Directory):
     assert (
         data_dir.is_optional
     ), "No compulsory files (nor subdirs to recurse into) should imply directory is optional"
-    assert data_dir.is_data_dir
     assert data_dir.path_from_root == Path(path_to_data)
     assert data_dir.parent is repo_directory
 
