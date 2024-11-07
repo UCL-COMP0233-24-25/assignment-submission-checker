@@ -415,7 +415,7 @@ class Directory:
 
             unexpected = unexpected - git_files
 
-        optional = files - unexpected - set(self.compulsory) + git_files
+        optional = (files - unexpected - set(self.compulsory)).union(git_files)
 
         return missing_compulsory, unexpected, optional
 
