@@ -65,6 +65,12 @@ def main(
 
         # Actually clone the repo from GH so it is available on the filesystem
         r = Repo.clone_from(github_clone_url, to_path=clone_dir)
+        # Make sure we capture all branches from the remote
+        default_branch = r.head
+        for ref in r.remote().refs:
+            r.git.checkout(ref.name.split("/")[-1])
+        # Leave on the default branch
+        r.git.checkout(default_branch)
         repo_name = infer_repo_name(r)
         r.close()
 

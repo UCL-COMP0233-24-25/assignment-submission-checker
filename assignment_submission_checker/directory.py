@@ -409,7 +409,9 @@ class Directory:
             # Do not report git files as unexpected if we're at the git root.
             # Add these as optionals
             for file in unexpected:
-                if any(fnmatch(file.lower(), pattern.lower()) for pattern in GIT_ROOT_PATTERNS):
+                if any(
+                    fnmatch.fnmatch(file.lower(), pattern.lower()) for pattern in GIT_ROOT_PATTERNS
+                ):
                     git_files.add(file)
 
             unexpected = unexpected - git_files
