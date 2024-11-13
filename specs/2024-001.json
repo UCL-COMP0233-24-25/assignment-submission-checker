@@ -21,7 +21,8 @@
             ],
             "optional": [
                 "AIUsage.md",
-                "Feedback.md"
+                "Feedback.md",
+                "*.png"
             ]
         },
         "data": {
