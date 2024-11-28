@@ -74,6 +74,20 @@ encounters a genuine problem with the submission.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="assignment_submission_checker.utils.filter_for_manual_ignores">
+<span class="sig-name descname"><span class="pre">filter_for_manual_ignores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.utils.filter_for_manual_ignores" title="Link to this definition">¶</a></dt>
+<dd><p>Filter the list of warnings and remove any unexpected files that match the <cite>ignore_patterns</cite>.</p>
+<p>As such, for each entry in warnings, it is necessary for us to:</p>
+<ol class="arabic simple">
+<li><p>Split the string on newline characters, and strip every resulting newline.</p></li>
+<li><p>If the first such split string matches the pattern ‘The following files were found in *, but were not expected:’, then we are dealing with a list of unexpected files.</p></li>
+<li><p>Save the pattern that was matched to the *, as it’s our file path, and we need it for pattern matching.</p></li>
+<li><p>For each remaining line that we’ve split, check if the file name + the directory we’re currently in matches any of the patterns given to us. Those patterns that match are removed.</p></li>
+<li><p>Return the same warning only containing the non-filtered files. If no files survived filtering, remove the warning.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="assignment_submission_checker.utils.match_to_unique_assignments">
 <span class="sig-name descname"><span class="pre">match_to_unique_assignments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">possible_mappings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">Value</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Value</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.utils.match_to_unique_assignments" title="Link to this definition">¶</a></dt>
 <dd><p>Given a set of objects, and possible assignments to a set of values for each object,
@@ -110,18 +124,20 @@ options.</p>
 temporary directory, that can be optionally passed to the wrapped function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>clean_on_error</strong> – If True, the temporary directory that is created will be removed if</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>clean_on_error</strong> – If True, the temporary directory that is created will be removed if
+the wrapped function raises an error.</p></li>
+<li><p><strong>clean_on_success</strong> – If True, the temporary directory that is created will be removed
+if the wrapped function returns without raising an error.</p></li>
+<li><p><strong>pass_dir_as_arg</strong> – If provided, the wrapped function will automatically be passed a
+keyword argument whose name is the value of <cite>pass_dir_as_arg</cite>, and whose value is the path
+to the created temporary directory.</p></li>
+<li><p><strong>where</strong> – If provided, this should be a path to a predefined location to use as the
+temporary directory. It must not currently exist on the filesystem, to ensure safety when
+deleting it.</p></li>
+</ul>
 </dd>
 </dl>
-<p>the wrapped function raises an error.
-:param clean_on_success: If True, the temporary directory that is created will be removed
-if the wrapped function returns without raising an error.
-:param pass_dir_as_arg: If provided, the wrapped function will automatically be passed a
-keyword argument whose name is the value of <cite>pass_dir_as_arg</cite>, and whose value is the path
-to the created temporary directory.
-:param where: If provided, this should be a path to a predefined location to use as the
-temporary directory. It must not currently exist on the filesystem, to ensure safety when
-deleting it.</p>
 </dd></dl>
 
 </section>

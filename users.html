@@ -64,7 +64,7 @@ As such, we recommand that you first create a new virtual environment using eith
 <p>When you make your environment, be sure to select Python 3.10 or later as the version of Python you want to install.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">Creating a new environment with conda on the command line</a>.</p></li>
-<li><p><a class="reference external" href="https://docs.anaconda.com/free/navigator/tutorials/manage-environments/#creating-a-new-environment">Creating a new environment with the Anaconda GUI</a></p></li>
+<li><p><a class="reference external" href="https://docs.anaconda.com/free/navigator/tutorials/manage-environments/#creating-a-new-environment">Creating a new environment with the Anaconda GUI</a>.</p></li>
 </ul>
 <p>Once you have created your environment, be sure to <strong>activate</strong> it before installing.
 You can do this through your <code class="docutils literal notranslate"><span class="pre">GitBash</span></code> (Windows) or terminal (MacOS / Linux):</p>
@@ -95,7 +95,7 @@ However, you may want to uninstall the old version first, just to make sure <cod
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
 <p>Once the <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> is installed, you can invoke it from the command-line:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span>--help
-usage:<span class="w"> </span>assignment-checker<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-g<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="o">]</span><span class="w"> </span><span class="o">[</span>-q<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>-o<span class="w"> </span>OUTPUT_FILE<span class="o">]</span><span class="w"> </span>assignment<span class="w"> </span>submission
+usage:<span class="w"> </span>assignment-checker<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-g<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="o">]</span><span class="w"> </span><span class="o">[</span>-q<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>-o<span class="w"> </span>OUTPUT_FILE<span class="o">]</span><span class="w"> </span>assignment<span class="w"> </span>submission<span class="w"> </span><span class="o">[</span>--ignore-unexpected<span class="w"> </span><span class="o">[</span>PATTERNS<span class="w"> </span>...<span class="o">]]</span>
 </pre></div>
 </div>
 <p>Make sure that you have the environment you installed the <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> into activated, otherwise you will get a command not found error.</p>
@@ -111,7 +111,7 @@ usage:<span class="w"> </span>assignment-checker<span class="w"> </span><span cl
 <p>Fetching the assignment specifications requires an internet connection.
 If you will be without an internet connection for an extended period of time, you can download the assignment specifications from the <a class="reference external" href="https://github.com/UCL-COMP0233-24-25/assignment-submission-checker/blob/main/specs/README.md"><code class="docutils literal notranslate"><span class="pre">specs</span></code> folder</a> in this repository, and store them on your computer.
 You can then direct the <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> directly to the copy of the specifications you have downloaded using the <code class="docutils literal notranslate"><span class="pre">-l</span></code> or <code class="docutils literal notranslate"><span class="pre">--local-specs</span></code> flags, and give the path to the downloaded specifications as the <code class="docutils literal notranslate"><span class="pre">assignment</span></code> argument.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span>--l<span class="w"> </span>/path/to/local/specs/YYYY-XXX.json<span class="w"> </span>path/to/my/comp0233/assignment-folder
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span>-l<span class="w"> </span>/path/to/local/specs/YYYY-XXX.json<span class="w"> </span>path/to/my/comp0233/assignment-folder
 </pre></div>
 </div>
 </section>
@@ -142,6 +142,39 @@ For this repository (for example), this would be <code class="docutils literal n
 </pre></div>
 </div>
 </section>
+<section id="suppressing-warnings">
+<h4>Suppressing Warnings<a class="headerlink" href="#suppressing-warnings" title="Link to this heading">¶</a></h4>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Using this feature can suppress genuine warnings - use at your own risk.</p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> is overly zealous in what it determines to be an unexpected file in your submission.
+This can lead to false negatives in some cases; these are typically files that the assignment specification does not account for, but are nonetheless valid files to be included in the submission <strong>and</strong> are actively used by the submission.
+Since the checker does not dynamically run any code, it cannot differentiate between this case and the case where a file is included without any purpose.
+It also flags files like <code class="docutils literal notranslate"><span class="pre">pytest</span></code> fixture <code class="docutils literal notranslate"><span class="pre">yaml</span></code> files as unexpected (for example), even in cases where use of fixtures in this way is permitted.</p>
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">--ignore-unexpected</span></code> flag to provide the <code class="docutils literal notranslate"><span class="pre">assignment-checker</span></code> with a sequence of shell match patterns that you want it to ignore as “unexpected”.
+These patterns should be relative to your submission’s root folder, if necessary.
+They will also need to be contained inside quotation marks (<code class="docutils literal notranslate"><span class="pre">&quot;</span></code>) if they contain wildcard characters like <code class="docutils literal notranslate"><span class="pre">*</span></code> or <code class="docutils literal notranslate"><span class="pre">?</span></code>.</p>
+<p>If you give the <code class="docutils literal notranslate"><span class="pre">--ignore-unexpected</span></code> flag immediately before your <code class="docutils literal notranslate"><span class="pre">scheme</span></code> and <code class="docutils literal notranslate"><span class="pre">submission</span></code> inputs, You will need to use <code class="docutils literal notranslate"><span class="pre">--</span></code> on the command line to indicate where your file patterns end and your <code class="docutils literal notranslate"><span class="pre">scheme</span></code> and <code class="docutils literal notranslate"><span class="pre">submission</span></code> inputs begin.
+If you provide the <code class="docutils literal notranslate"><span class="pre">--ignore-unexpected</span></code> flag on its own, <strong>all</strong> such warnings will be suppressed.</p>
+<p>For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span>--ignore-unexpected<span class="w"> </span><span class="s1">&#39;*.csv&#39;</span><span class="w"> </span>report/extra-figure.png<span class="w"> </span>--<span class="w"> </span><span class="m">2024</span>-001<span class="w"> </span>path/to/my/comp0233/assignment-folder
+</pre></div>
+</div>
+<p>will suppress warnings about unexpected files that end in <code class="docutils literal notranslate"><span class="pre">.csv</span></code> (wherever they are found in the submission) and specifically the file <code class="docutils literal notranslate"><span class="pre">report/extra-figure.png</span></code> if it is unexpected.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">--</span></code> syntax is used to indicate where the file patterns end and the <code class="docutils literal notranslate"><span class="pre">scheme</span></code> argument begins (as otherwise the command-line can’t determine this itself).
+It is not necessary if you provide the <code class="docutils literal notranslate"><span class="pre">--ignore-unexpected</span></code> flag <strong>after</strong> giving the <code class="docutils literal notranslate"><span class="pre">scheme</span></code> and <code class="docutils literal notranslate"><span class="pre">submission</span></code> inputs;</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span><span class="m">2024</span>-001<span class="w"> </span>path/to/my/comp0233/assignment-folder<span class="w"> </span>--ignore-unexpected<span class="w"> </span><span class="s1">&#39;*.csv&#39;</span><span class="w"> </span>report/extra-figure.png
+</pre></div>
+</div>
+<p>We recommend using this latter syntax (<code class="docutils literal notranslate"><span class="pre">--ignore-unexpected</span></code> at the end of your command-line call) for maximum clarity.</p>
+<p>Providing no file patterns will simply suppress all “unexpected file” warnings;</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span>--ignore-unexpected<span class="w"> </span>--<span class="w"> </span><span class="m">2024</span>-001<span class="w"> </span>path/to/my/comp0233/assignment-folder
+<span class="o">(</span>assignment-checker-environment<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>assignment-checker<span class="w"> </span><span class="m">2024</span>-001<span class="w"> </span>path/to/my/comp0233/assignment-folder<span class="w"> </span>--ignore-unexpected
+</pre></div>
+</div>
+<p>note that the <code class="docutils literal notranslate"><span class="pre">--</span></code> is still necessary in the former case to indicate where the positional arguments begin.</p>
+</section>
 </section>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
@@ -160,9 +193,9 @@ This information is broken down into three levels:</p>
 Additionally, the command-line workflow backend can be used programmatically from within Python, via <code class="docutils literal notranslate"><span class="pre">assignment_submission_checker.cli_main:main</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">-h</span></code>, <code class="docutils literal notranslate"><span class="pre">--help</span></code>: Displays the command-line help for the tool.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-o</span></code>, <code class="docutils literal notranslate"><span class="pre">--output-file</span></code>: If you are finding the text output too long, or want to save it for later, you can have the tool write the output to a text file. You should provide the name of the text file that you want to write immediately after this flag. Note that <code class="docutils literal notranslate"><span class="pre">assignment-checker</span> <span class="pre">-o</span> <span class="pre">out.txt</span> <span class="pre">&lt;other</span> <span class="pre">args&gt;</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">assignment-checker</span> <span class="pre">&lt;other-args&gt;</span> <span class="pre">&gt;&gt;</span> <span class="pre">out.txt</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-q</span></code>, <code class="docutils literal notranslate"><span class="pre">--quiet</span></code>: Suppresses the text output of the tool to the terminal. Make sure you’re using the <code class="docutils literal notranslate"><span class="pre">-o</span></code>, <code class="docutils literal notranslate"><span class="pre">--output-file</span></code> option in conjunction with this one!</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-v</span></code>, <code class="docutils literal notranslate"><span class="pre">--version</span></code>: Displays the version of the tool that you currently have installed.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-o</span></code>, <code class="docutils literal notranslate"><span class="pre">--output-file</span></code>: If you are finding the text output too long, or want to save it for later, you can have the tool write the output to a text file. You should provide the name of the text file that you want to write immediately after this flag. Note that <code class="docutils literal notranslate"><span class="pre">assignment-checker</span> <span class="pre">-o</span> <span class="pre">out.txt</span> <span class="pre">&lt;other</span> <span class="pre">args&gt;</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">assignment-checker</span> <span class="pre">&lt;other-args&gt;</span> <span class="pre">&gt;&gt;</span> <span class="pre">out.txt</span></code>.</p></li>
 </ul>
 </section>
 </section>
