@@ -7,6 +7,7 @@ You can read the full details in the [developer docs](https://ucl-comp0233-24-25
 Explicit list of assignment specifications that are available from this service.
 
 - `2024-001`: Assignment 1, 2024-2025. Planning Delivery Tours.
+- `2024-002`: Assignment 2, 2024-2025. Delivery Schedules.
 
 ## Naming Convention
 
