@@ -87,8 +87,10 @@ def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -
                 i + 1
                 for i, file in enumerate(w[1:])
                 if not any(
-                    fnmatch(f"{matched_dir}/{file.strip()}", pattern) for pattern in ignore_patterns
+                    fnmatch.fnmatch(f"{matched_dir}/{file.strip()}", pattern)
+                    for pattern in ignore_patterns
                 )
+                and file.strip()  # In case of trailing newlines or something
             ]
             if still_not_ignored:
                 # Include the warnings header, as it's still a valid warning.
@@ -101,6 +103,8 @@ def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -
             # This warning was not an unexpected files warning,
             # preserve it and then continue moving through the list of warnings.
             filtered_warnings.append(warning)
+
+    return filtered_warnings
 
 
 def match_to_unique_assignments(possible_mappings: Dict[Obj, Set[Val]]) -> Dict[Obj, Val]:
