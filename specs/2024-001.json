@@ -11,7 +11,7 @@
             "utilities.py"
         ],
         "optional": [
-            "deciding_depot_locations.ipynb",
+            "deciding_depot_location.ipynb",
             "plotting_utilities.py"
         ],
         "report": {
@@ -21,7 +21,7 @@
             ],
             "optional": [
                 "AIUsage.md",
-                "Feedback.md"
+                "Feedback.md",
             ]
         },
         "data": {
@@ -29,7 +29,7 @@
                 "locations.csv"
             ],
             "data-file-types": [
-                "*.csv"
+                "*.csv",
             ]
         },
         ".github": {
