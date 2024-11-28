@@ -44,7 +44,7 @@ def main(
     github_clone_url: Optional[str] = None,
     local_specs: Optional[Path] = None,
     submission: Optional[Path] = None,
-) -> None:
+) -> str:
     """
     Online specs take priority over local specs (assignment > local_specs)
     Online repo takes priority over local submission (github_clone_url > submission)
