@@ -22,7 +22,6 @@
             "optional": [
                 "AIUsage.md",
                 "Feedback.md",
-                "*.png"
             ]
         },
         "data": {
@@ -31,7 +30,6 @@
             ],
             "data-file-types": [
                 "*.csv",
-                "*.yaml"
             ]
         },
         ".github": {
