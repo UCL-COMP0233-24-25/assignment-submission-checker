@@ -39,25 +39,25 @@
                 "Makefile*"
             ],
             "source": {
-                "data-file-patterns": [
+                "data-file-types": [
                     "conf.py",
                     "*.md",
                     "*.rst"
                 ],
                 "_possible_source_subfolders": {
                     "variable-name": "*",
-                    "data-file-patterns": [
+                    "data-file-types": [
                         "*.md",
                         "*.rst"
                     ]
                 },
                 "_static": {
-                    "data-file-patterns": [
+                    "data-file-types": [
                         "*"
                     ]
                 },
                 "_templates": {
-                    "data-file-patterns": [
+                    "data-file-types": [
                         "*"
                     ]
                 }
