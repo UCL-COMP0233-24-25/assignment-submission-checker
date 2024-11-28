@@ -591,19 +591,30 @@ class Directory:
         # Create a list of all possible matches, for each subdirectory
         possible_matches_compulsory = {}
         possible_matches_optional = {}
+        possible_matches_compulsory_with_warnings = {}
+        possible_matches_optional_with_warnings = {}
         for subdir in self.variable_name_subdirs:
             compatible_directories: List[str] = []
+            compatible_directories_with_warnings: List[str] = []
             for pos_name in possible_names:
                 fatal, warnings, _ = subdir.check_against_directory(
                     directory / pos_name, do_not_set_name=True
                 )
-                if (fatal is None) and (not warnings):
+                if (not fatal) and (not warnings):
                     compatible_directories.append(pos_name)
+                if not fatal:
+                    compatible_directories_with_warnings.append(pos_name)
 
             if subdir.is_optional:
                 possible_matches_optional[subdir.name] = set(compatible_directories)
+                possible_matches_optional_with_warnings[subdir.name] = set(
+                    compatible_directories_with_warnings
+                )
             else:
                 possible_matches_compulsory[subdir.name] = set(compatible_directories)
+                possible_matches_compulsory_with_warnings[subdir.name] = set(
+                    compatible_directories_with_warnings
+                )
 
         # Possible matches now maps the name of a subdir to a list of all
         # folders on the filesystem that it could match to.
@@ -611,6 +622,31 @@ class Directory:
         all_are_mapped = match_to_unique_assignments(
             {**possible_matches_compulsory, **possible_matches_optional}
         )
+        # Try matching, allowing for optional directories to throw warnings
+        if not all_are_mapped:
+            all_are_mapped = match_to_unique_assignments(
+                {
+                    **possible_matches_compulsory,
+                    **possible_matches_optional_with_warnings,
+                }
+            )
+        # Try matching, allowing for compulsory directories to throw warnings
+        if not all_are_mapped:
+            all_are_mapped = match_to_unique_assignments(
+                {
+                    **possible_matches_compulsory_with_warnings,
+                    **possible_matches_optional,
+                }
+            )
+        # Try matching, allowing warnings anywhere.
+        if not all_are_mapped:
+            all_are_mapped = match_to_unique_assignments(
+                {
+                    **possible_matches_compulsory_with_warnings,
+                    **possible_matches_optional_with_warnings,
+                }
+            )
+        # If we don't have a mapping at this point, we're doomed.
         if all_are_mapped:
             # all_are_mapped maps subdir.name to a directory.
             # We need to flip this association and also provide subdir itself as the value.

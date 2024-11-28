@@ -108,6 +108,22 @@ pre-commit run -a
 
 to run pre-commit across all files in the repository at any time.
 
+### Testing
+
+Our test suite is designed to [run with `tox`](https://tox.wiki/en/4.23.2/index.html), though it can also be invoked by running `pytest` and pointing it to the `tests` folder.
+Note that if you do the latter, you might want to first [configure the `integration-test`](#integration-test), or simply ignore the result of this test.
+
+#### Integration Test
+
+The `tests/integration-test` subfolder contains a configurable integration test that developers can use to run the entire analysis pipeline, but in a way that is compatible with a debugger such as `debugpy`.
+To configure this test, you should:
+
+- Setup the `tests/integration-test/inputs` folder with your assignment scheme and submission, if these are needed. The integration test can cope with both local schemes and submissions, as well as fetching schemes or repositories from GitHub.
+- Add a fixture to `tests/integration-test/test_integration.py` that defines the arguments you want to pass to `cli_main:main`.
+
+The file comes pre-configured with some default settings to get you started, though the contents of the `tests/integration-test/inputs` folder are deliberately ignored by the repository.
+Likewise, you should direct any outputs you need from this integration test to `tests/integration-test/outputs`, which is also ignored by the repository.
+
 ## Building the Documentation
 
 The documentation is built [using `Sphinx`][sphinx] and deployed via GitHub actions whenever a push to `main` occurs.
