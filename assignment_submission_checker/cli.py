@@ -62,6 +62,14 @@ def cli():
         "local copy of the assignment specification (.json) you wish to read in. ",
     )
     parser.add_argument(
+        "-o",
+        "--output-file",
+        default=None,
+        help="Redirect any (text) output to the given location.",
+        type=str,
+        nargs=1,
+    )
+    parser.add_argument(
         "-q",
         "--quiet",
         action="store_true",
@@ -76,27 +84,20 @@ def cli():
         help="Display the current version number of this package.",
     )
     parser.add_argument(
-        "-o",
-        "--output-file",
-        type=str,
-        default=None,
-        help="Redirect any (text) output to the given location.",
-    )
-    parser.add_argument(
         "assignment",
-        type=str,
-        default=None,
         help="The assignment specification YYYY-assignment_id to validate the submission against, "
         "or the path to the specification file if using the -l or --local-specs option. "
         f"See {ASSIGNMENT_SPEC_REFERENCES}/README.md for an explanation of the YYYY-assignment_id format, "
         f"and {ASSIGNMENT_SPEC_REFERENCES} for a list of available assignment specifications.",
+        nargs=1,
+        type=str,
     )
     parser.add_argument(
         "submission",
-        type=str,
-        default=None,
         help="Path to your submission folder, "
         "or the HTTPS / SSH clone link of your GitHub classroom repository if using the -g or --github-clone option.",
+        nargs=1,
+        type=str,
     )
 
     args = parser.parse_args()
@@ -105,16 +106,16 @@ def cli():
     if args.version:
         print(f"{parser.prog}, {__version__}")
         sys.exit(0)
-    if args.assignment is None:
-        parser.print_help_and_exit("assignment argument is required.")
-    elif args.submission is None:
-        parser.print_help_and_exit("submission argument is required.")
+    args.assignment = args.assignment[0]
+    args.submission = args.submission[0]
 
     # Check that we can actually produce the output
     if args.quiet and (args.output_file is None):
         parser.print_help_and_exit(
             msg="You have suppressed console output but have not provided an alternative output location."
         )
+    elif args.output_file is not None:
+        args.output_file = args.output_file[0]
 
     # Check that the supposed local copy of the file is actually exists if we are being asked to use it.
     if args.local_specs:
