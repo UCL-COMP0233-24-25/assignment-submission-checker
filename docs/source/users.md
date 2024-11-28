@@ -20,8 +20,8 @@ As such, we recommand that you first create a new virtual environment using eith
 
 When you make your environment, be sure to select Python 3.10 or later as the version of Python you want to install.
 
-- [Creating a new environment with conda on the command line](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands).
-- [Creating a new environment with the Anaconda GUI](https://docs.anaconda.com/free/navigator/tutorials/manage-environments/#creating-a-new-environment)
+* [Creating a new environment with conda on the command line](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands).
+* [Creating a new environment with the Anaconda GUI](https://docs.anaconda.com/free/navigator/tutorials/manage-environments/#creating-a-new-environment).
 
 Once you have created your environment, be sure to **activate** it before installing.
 You can do this through your `GitBash` (Windows) or terminal (MacOS / Linux):
