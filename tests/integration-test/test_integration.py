@@ -26,6 +26,7 @@ def default_args() -> Dict[str, str | Path]:
     return {
         "assignment_lookup": None,
         "github_clone_url": None,
+        "ignore_unexpected_files": ["report-test/fig2-unexpected.png", "*.csv"],
         "local_specs": (THIS_DIR / "inputs" / "specs" / "specs.json").resolve(),
         "submission": (THIS_DIR / "inputs" / "submission").resolve(),
     }

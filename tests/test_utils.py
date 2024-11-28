@@ -7,6 +7,7 @@ import pytest
 
 from assignment_submission_checker.utils import (
     copy_tree,
+    filter_for_manual_ignores,
     match_to_unique_assignments,
     provide_tmp_directory,
 )
@@ -267,3 +268,15 @@ def test_unique_assignments(input: Dict[Obj, List[Val]], expected_answers: List[
             found_a_valid_answer = True
 
     assert found_a_valid_answer, "An expected answer was not found."
+
+
+def test_filter_for_manual_ignores():
+    """ """
+    unexpected = ["1.py", "2.py", "3.md"]
+    w = [
+        "The following files were found in foo/bar, but were not expected:\n"
+        + "".join(f"\t{f}\n" for f in unexpected)
+    ]
+    patts = "*.py"
+
+    filter_for_manual_ignores(w, patts)

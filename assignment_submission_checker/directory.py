@@ -220,6 +220,7 @@ class Directory:
         self,
         directory: Path,
         do_not_set_name: bool = False,
+        root_submission_dir: Optional[Path] = None,
         *substitutes_for_main_branch: str,
     ) -> Tuple[AssignmentCheckerError | None, List[str], List[str]]:
         """
@@ -322,19 +323,24 @@ class Directory:
 
         # Check the files that this folder contains.
         missing_compulsory, unexpected, optional = self.check_files(directory)
+        directory_location_reported_as = (
+            directory.stem
+            if root_submission_dir is None
+            else str(directory.relative_to(Path(root_submission_dir)))
+        )
         if missing_compulsory:
             WARNING.append(
-                f"Your submission is missing the following compulsory files (not found in {directory.stem}):\n"
+                f"Your submission is missing the following compulsory files (not found in {directory_location_reported_as}):\n"
                 + "".join(f"\t{f}\n" for f in missing_compulsory)
             )
         if unexpected:
             WARNING.append(
-                f"The following files were found in {directory.stem}, but were not expected:\n"
+                f"The following files were found in {directory_location_reported_as}, but were not expected:\n"
                 + "".join(f"\t{f}\n" for f in unexpected)
             )
         if optional:
             INFORMATION.append(
-                f"Found the following optional files inside {directory.stem}:\n"
+                f"Found the following optional files inside {directory_location_reported_as}:\n"
                 + "".join(f"\t{f}\n" for f in optional)
             )
 
@@ -342,7 +348,10 @@ class Directory:
         # Handle non-variable-named directories.
         for subdir in self.fixed_name_subdirs:
             FATAL, s_warning, s_information = self.investigate_subdir(
-                directory / subdir.name, subdir, do_not_set_name=do_not_set_name
+                directory / subdir.name,
+                subdir,
+                do_not_set_name=do_not_set_name,
+                root_submission_dir=root_submission_dir,
             )
             WARNING.extend(s_warning)
             INFORMATION.extend(s_information)
@@ -376,7 +385,10 @@ class Directory:
         # Then, actually go into these directories to continue the checking and logging.
         for path, subdir in matches.items():
             FATAL, s_warning, s_information = self.investigate_subdir(
-                directory / path, subdir, do_not_set_name=do_not_set_name
+                directory / path,
+                subdir,
+                do_not_set_name=do_not_set_name,
+                root_submission_dir=root_submission_dir,
             )
             WARNING.extend(s_warning)
             INFORMATION.extend(s_information)
@@ -519,7 +531,11 @@ class Directory:
                 return False
 
     def investigate_subdir(
-        self, path_to_subdir: Path, subdir: Directory, do_not_set_name: bool = False
+        self,
+        path_to_subdir: Path,
+        subdir: Directory,
+        do_not_set_name: bool = False,
+        root_submission_dir: Optional[Path] = None,
     ) -> Tuple[AssignmentCheckerError | None, List[str], List[str]]:
         """
         Essentially wraps check_directory when called on a subdirectory on the instance.
@@ -554,7 +570,9 @@ class Directory:
 
         # Delegate checking to subdirectory
         FATAL, s_warning, s_information = subdir.check_against_directory(
-            path_to_subdir, do_not_set_name=do_not_set_name
+            path_to_subdir,
+            do_not_set_name=do_not_set_name,
+            root_submission_dir=root_submission_dir,
         )
         warning.extend(s_warning)
         information.extend(s_information)

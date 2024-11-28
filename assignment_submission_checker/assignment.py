@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .directory import Directory, DirectoryDict
-from .utils import AssignmentCheckerError, copy_tree
+from .utils import AssignmentCheckerError, copy_tree, filter_for_manual_ignores
 
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
@@ -175,7 +175,9 @@ class Assignment:
             + "\n"
         )
 
-    def validate_assignment(self, submission_dir: Path, tmp_dir: Path) -> str:
+    def validate_assignment(
+        self, submission_dir: Path, tmp_dir: Path, ignore_extra_files: Optional[List[str]] = None
+    ) -> str:
         """
         Validates that the submission directory provided matches the specifications of this instance.
 
@@ -187,15 +189,23 @@ class Assignment:
         OS should handle this if an uncaught error is encountered.
 
         :param submission_dir: Path to the root submission directory.
-        :returns: FIXME
+        :param tmp_dir: Temporary directory to use to unpack and validate submission.
+        :param ignore_extra_files: Suppress warnings about unexpected files that match the patterns given.
         """
         # Copy to the temporary directory
         submission = copy_tree(submission_dir, tmp_dir, into=True)
 
         # Check the submission content
         fatal, warnings, information = self.directory_structure.check_against_directory(
-            submission, do_not_set_name=False, *self.git_allowable_branches
+            submission,
+            do_not_set_name=False,
+            root_submission_dir=submission,
+            *self.git_allowable_branches,
         )
+
+        # Filter warnings gathered for any file patterns that we have been told to ignore
+        if ignore_extra_files:
+            warnings = filter_for_manual_ignores(warnings, ignore_extra_files)
 
         # Parse the output into a string,
         # and return
