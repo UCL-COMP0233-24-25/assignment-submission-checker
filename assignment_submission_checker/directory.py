@@ -326,7 +326,7 @@ class Directory:
         directory_location_reported_as = (
             directory.stem
             if root_submission_dir is None
-            else directory.relative_to(Path(root_submission_dir))
+            else str(directory.relative_to(Path(root_submission_dir)))
         )
         if missing_compulsory:
             WARNING.append(

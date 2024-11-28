@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .directory import Directory, DirectoryDict
-from .utils import AssignmentCheckerError, copy_tree
+from .utils import AssignmentCheckerError, copy_tree, filter_for_manual_ignores
 
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
@@ -210,23 +210,3 @@ class Assignment:
         # Parse the output into a string,
         # and return
         return self.parse_into_output(fatal, warnings, information)
-
-
-def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -> List[str]:
-    """
-    Filter the list of warnings and remove any unexpected files that match the `ignore_patterns`.
-
-    Unexpected files are flagged as warnings in the codebase using the following syntax:
-
-    ```
-    WARNING.append(
-        f"The following files were found in {directory}, but were not expected:\n"
-        + "".join(f"\t{f}\n" for f in unexpected)
-    )
-    ```
-
-    As such, for each entry in `warnings`, it is necessary for us to:
-
-    - Split the string on newline characters, and strip every resulting newline.
-    - If the first such split string matches the pattern 'The following files were found in *, but were not expected:', then we are dealing with a list of unexpected files.
-    """
