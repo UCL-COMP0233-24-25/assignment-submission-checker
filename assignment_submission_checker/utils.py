@@ -50,23 +50,14 @@ def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -
     """
     Filter the list of warnings and remove any unexpected files that match the `ignore_patterns`.
 
-    Unexpected files are flagged as warnings in the codebase using the following syntax:
-
-    ```
-    WARNING.append(
-        f"The following files were found in {directory}, but were not expected:\n"
-        + "".join(f"\t{f}\n" for f in unexpected)
-    )
-    ```
-
-    As such, for each entry in `warnings`, it is necessary for us to:
+    As such, for each entry in warnings, it is necessary for us to:
 
     - Split the string on newline characters, and strip every resulting newline.
-    - If the first such split string matches the pattern 'The following files were found in *, but were not expected:', then we are dealing with a list of unexpected files.
-        - Save the pattern that was matched to the * in this case, as it's our file path, and we need it for pattern matching.
-    - For each remaining line that we've split, check if the file name + the directory we're currently in matches any of the patterns given to us.
-        - Those patterns that match are removed.
-    - Return the same warning, but only containing the non-filtered files.
+    - If the first such split string matches the pattern 'The following files were found in \*, but were not expected:', then we are dealing with a list of unexpected files.
+    - Save the pattern that was matched to the \*, as it's our file path, and we need it for pattern matching.
+    - For each remaining line that we've split, check if the file name + the directory we're currently in matches any of the patterns given to us. Those patterns that match are removed.
+    - Return the same warning only containing the non-filtered files. If no files survived filtering, remove the warning.
+
     """
     warnings_header = "The following files were found in *, but were not expected:"
     filtered_warnings = []
@@ -244,15 +235,15 @@ def provide_tmp_directory(
     temporary directory, that can be optionally passed to the wrapped function.
 
     :param clean_on_error: If True, the temporary directory that is created will be removed if
-    the wrapped function raises an error.
+        the wrapped function raises an error.
     :param clean_on_success: If True, the temporary directory that is created will be removed
-    if the wrapped function returns without raising an error.
+        if the wrapped function returns without raising an error.
     :param pass_dir_as_arg: If provided, the wrapped function will automatically be passed a
-    keyword argument whose name is the value of `pass_dir_as_arg`, and whose value is the path
-    to the created temporary directory.
+        keyword argument whose name is the value of `pass_dir_as_arg`, and whose value is the path
+        to the created temporary directory.
     :param where: If provided, this should be a path to a predefined location to use as the
-    temporary directory. It must not currently exist on the filesystem, to ensure safety when
-    deleting it.
+        temporary directory. It must not currently exist on the filesystem, to ensure safety when
+        deleting it.
     """
 
     def decorator(func: Callable[[Any], Any]) -> Callable[[Any], Any]:

@@ -82,7 +82,7 @@ If you will be without an internet connection for an extended period of time, yo
 You can then direct the `assignment-checker` directly to the copy of the specifications you have downloaded using the `-l` or `--local-specs` flags, and give the path to the downloaded specifications as the `assignment` argument.
 
 ```bash
-(assignment-checker-environment) $ assignment-checker --l /path/to/local/specs/YYYY-XXX.json path/to/my/comp0233/assignment-folder
+(assignment-checker-environment) $ assignment-checker -l /path/to/local/specs/YYYY-XXX.json path/to/my/comp0233/assignment-folder
 ```
 
 #### GitHub Submissions (Experimental)
@@ -108,6 +108,50 @@ For this repository (for example), this would be `git@github.com:UCL-COMP0233-24
 (assignment-checker-environment) $ assignment-checker -g 2024-001 https://github.com/repo-owner/repo-name.git # Clone via HTTPS
 ```
 
+#### Suppressing Warnings
+
+```{danger}
+Using this feature can suppress genuine warnings - use at your own risk.
+```
+
+The `assignment-checker` is overly zealous in what it determines to be an unexpected file in your submission.
+This can lead to false negatives in some cases; these are typically files that the assignment specification does not account for, but are nonetheless valid files to be included in the submission **and** are actively used by the submission.
+Since the checker does not dynamically run any code, it cannot differentiate between this case and the case where a file is included without any purpose.
+It also flags files like `pytest` fixture `yaml` files as unexpected (for example), even in cases where use of fixtures in this way is permitted.
+
+You can use the `--ignore-unexpected` flag to provide the `assignment-checker` with a sequence of shell match patterns that you want it to ignore as "unexpected".
+These patterns should be relative to your submission's root folder, if necessary.
+They will also need to be contained inside quotation marks (`"`) if they contain wildcard characters like `*` or `?`.
+
+If you give the `--ignore-unexpected` flag immediately before your `scheme` and `submission` inputs, You will need to use `--` on the command line to indicate where your file patterns end and your `scheme` and `submission` inputs begin.
+If you provide the `--ignore-unexpected` flag on its own, **all** such warnings will be suppressed.
+
+For example,
+
+```bash
+(assignment-checker-environment) $ assignment-checker --ignore-unexpected '*.csv' report/extra-figure.png -- 2024-001 path/to/my/comp0233/assignment-folder
+```
+
+will suppress warnings about unexpected files that end in `.csv` (wherever they are found in the submission) and specifically the file `report/extra-figure.png` if it is unexpected.
+
+The `--` syntax is used to indicate where the file patterns end and the `scheme` argument begins (as otherwise the command-line can't determine this itself).
+It is not necessary if you provide the `--ignore-unexpected` flag **after** giving the `scheme` and `submission` inputs;
+
+```bash
+(assignment-checker-environment) $ assignment-checker 2024-001 path/to/my/comp0233/assignment-folder --ignore-unexpected '*.csv' report/extra-figure.png
+```
+
+We recommend using this latter syntax (`--ignore-unexpected` at the end of your command-line call) for maximum clarity.
+
+Providing no file patterns will simply suppress all "unexpected file" warnings;
+
+```bash
+(assignment-checker-environment) $ assignment-checker --ignore-unexpected -- 2024-001 path/to/my/comp0233/assignment-folder
+(assignment-checker-environment) $ assignment-checker 2024-001 path/to/my/comp0233/assignment-folder --ignore-unexpected
+```
+
+note that the `--` is still necessary in the former case to indicate where the positional arguments begin.
+
 ### Output
 
 The `assignment-checker` will print information to the terminal once it has finished running.
@@ -125,6 +169,6 @@ The `assignment-checker` has additional command-line options that can be used to
 Additionally, the command-line workflow backend can be used programmatically from within Python, via `assignment_submission_checker.cli_main:main`.
 
 - `-h`, `--help`: Displays the command-line help for the tool.
+- `-o`, `--output-file`: If you are finding the text output too long, or want to save it for later, you can have the tool write the output to a text file. You should provide the name of the text file that you want to write immediately after this flag. Note that `assignment-checker -o out.txt <other args>` is equivalent to `assignment-checker <other-args> >> out.txt`.
 - `-q`, `--quiet`: Suppresses the text output of the tool to the terminal. Make sure you're using the `-o`, `--output-file` option in conjunction with this one!
 - `-v`, `--version`: Displays the version of the tool that you currently have installed.
-- `-o`, `--output-file`: If you are finding the text output too long, or want to save it for later, you can have the tool write the output to a text file. You should provide the name of the text file that you want to write immediately after this flag. Note that `assignment-checker -o out.txt <other args>` is equivalent to `assignment-checker <other-args> >> out.txt`.
