@@ -6,3 +6,7 @@ build/
 .tox
 
 .vscode
+
+# Ignore integration test configurations
+tests/integration-test/inputs/
+tests/integration-test/outputs/

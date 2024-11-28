@@ -3,7 +3,6 @@ include LICENSE
 
 exclude .gitignore
 exclude .pre-commit-config.yaml
-exclude tox.ini
 
 recursive-include assignment_submission_checker *.py
 

@@ -49,3 +49,25 @@ include-package-data = true
 include = ["assignment_submission_checker"]
 
 [tool.setuptools_scm]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+env_list =
+    py310
+minversion = 4.6.3
+
+[gh-actions]
+python =
+    3.10: py310
+
+[testenv]
+description = Run unit tests with pytest
+package = wheel
+pass_env = HOME
+wheel_build_env = .pkg
+deps =
+    pytest>=6
+commands =
+    pytest {tty:--color=yes} -vv --ignore=tests/integration-test/ {toxinidir} {posargs}
+"""
