@@ -1,12 +1,12 @@
 import shutil
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Optional
+from typing import List, Optional
 
 import requests
-from git import Repo
 
 from assignment_submission_checker.assignment import Assignment
+from assignment_submission_checker.git_utils import clone_and_fetch_all_refs
 from assignment_submission_checker.utils import provide_tmp_directory
 
 ASSIGNMENT_SPEC_REFERENCES = (
@@ -32,16 +32,10 @@ def fetch_spec(assignment_spec: str) -> None:
     return r.text
 
 
-def infer_repo_name(repo: Repo) -> str:
-    """
-    Attempt to infer the name of a repository cloned from GitHub.
-    """
-    return repo.remotes.origin.url.split(".git")[0].split("/")[-1]
-
-
 def main(
     assignment_lookup: Optional[str] = None,
     github_clone_url: Optional[str] = None,
+    ignore_unexpected_files: Optional[List[str]] = None,
     local_specs: Optional[Path] = None,
     submission: Optional[Path] = None,
 ) -> str:
@@ -63,16 +57,7 @@ def main(
         clone_dir = tmp_dir / "cloned"
         clone_dir.mkdir(exist_ok=True)
 
-        # Actually clone the repo from GH so it is available on the filesystem
-        r = Repo.clone_from(github_clone_url, to_path=clone_dir)
-        # Make sure we capture all branches from the remote
-        default_branch = r.head
-        for ref in r.remote().refs:
-            r.git.checkout(ref.name.split("/")[-1])
-        # Leave on the default branch
-        r.git.checkout(default_branch)
-        repo_name = infer_repo_name(r)
-        r.close()
+        repo_name = clone_and_fetch_all_refs(github_clone_url, clone_dir)
 
         # Relocate the cloned repository deeper inside another temporary folder, so that
         # names match up with those expected.
@@ -96,6 +81,7 @@ def main(
         return assignment.validate_assignment(
             submission_dir=submission_dir,
             tmp_dir=tmp_dir,
+            ignore_extra_files=ignore_unexpected_files,
         )
 
     # Validate and collect output

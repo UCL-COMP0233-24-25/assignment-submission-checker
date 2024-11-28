@@ -175,7 +175,9 @@ class Assignment:
             + "\n"
         )
 
-    def validate_assignment(self, submission_dir: Path, tmp_dir: Path) -> str:
+    def validate_assignment(
+        self, submission_dir: Path, tmp_dir: Path, ignore_extra_files: Optional[List[str]] = None
+    ) -> str:
         """
         Validates that the submission directory provided matches the specifications of this instance.
 
@@ -187,16 +189,44 @@ class Assignment:
         OS should handle this if an uncaught error is encountered.
 
         :param submission_dir: Path to the root submission directory.
-        :returns: FIXME
+        :param tmp_dir: Temporary directory to use to unpack and validate submission.
+        :param ignore_extra_files: Suppress warnings about unexpected files that match the patterns given.
         """
         # Copy to the temporary directory
         submission = copy_tree(submission_dir, tmp_dir, into=True)
 
         # Check the submission content
         fatal, warnings, information = self.directory_structure.check_against_directory(
-            submission, do_not_set_name=False, *self.git_allowable_branches
+            submission,
+            do_not_set_name=False,
+            root_submission_dir=submission,
+            *self.git_allowable_branches,
         )
+
+        # Filter warnings gathered for any file patterns that we have been told to ignore
+        if ignore_extra_files:
+            warnings = filter_for_manual_ignores(warnings, ignore_extra_files)
 
         # Parse the output into a string,
         # and return
         return self.parse_into_output(fatal, warnings, information)
+
+
+def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -> List[str]:
+    """
+    Filter the list of warnings and remove any unexpected files that match the `ignore_patterns`.
+
+    Unexpected files are flagged as warnings in the codebase using the following syntax:
+
+    ```
+    WARNING.append(
+        f"The following files were found in {directory}, but were not expected:\n"
+        + "".join(f"\t{f}\n" for f in unexpected)
+    )
+    ```
+
+    As such, for each entry in `warnings`, it is necessary for us to:
+
+    - Split the string on newline characters, and strip every resulting newline.
+    - If the first such split string matches the pattern 'The following files were found in *, but were not expected:', then we are dealing with a list of unexpected files.
+    """

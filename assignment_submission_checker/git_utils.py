@@ -16,6 +16,34 @@ GIT_ROOT_PATTERNS = [
 ]
 
 
+def clone_and_fetch_all_refs(clone_url: str, clone_into: Path) -> str:
+    """
+    Clone a remote repository from the `clone_url` provided, into the `clone_into` location.
+
+    Method returns the name of the remote repository that was fetched, if it can be inferred.
+    """
+    r = git.Repo.clone_from(clone_url, to_path=clone_into)
+
+    # Make sure we capture all branches from the remote
+    default_branch = r.head
+    for ref in r.remote().refs:
+        r.git.checkout(ref.name.split("/")[-1])
+
+    # Leave on the default branch
+    r.git.checkout(default_branch)
+    repo_name = infer_repo_name(r)
+    r.close()
+
+    return repo_name
+
+
+def infer_repo_name(repo: git.Repo) -> str:
+    """
+    Attempt to infer the name of a repository cloned from GitHub.
+    """
+    return repo.remotes.origin.url.split(".git")[0].split("/")[-1]
+
+
 def is_clean(
     repo: git.Repo, boolean_output: bool = False
 ) -> Tuple[List[str], List[str], List[str]] | bool:

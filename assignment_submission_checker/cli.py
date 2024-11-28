@@ -84,6 +84,16 @@ def cli():
         help="Display the current version number of this package.",
     )
     parser.add_argument(
+        "--ignore-unexpected",
+        default=None,
+        dest="ignore_unexpected_files",
+        help="DANGEROUS OPTION - use at your own risk! "
+        "Suppress warnings from the checker that highlight unexpected files that were found, which match the shell expressions provided. "
+        "Providing no match patterns will suppress ALL such warnings.",
+        type=str,
+        nargs="*",
+    )
+    parser.add_argument(
         "assignment",
         help="The assignment specification YYYY-assignment_id to validate the submission against, "
         "or the path to the specification file if using the -l or --local-specs option. "
@@ -108,6 +118,8 @@ def cli():
         sys.exit(0)
     args.assignment = args.assignment[0]
     args.submission = args.submission[0]
+    if args.ignore_unexpected_files is not None and len(args.ignore_unexpected_files) == 0:
+        args.ignore_unexpected_files = ["*", "**"]
 
     # Check that we can actually produce the output
     if args.quiet and (args.output_file is None):
