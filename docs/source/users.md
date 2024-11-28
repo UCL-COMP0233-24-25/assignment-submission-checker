@@ -27,7 +27,7 @@ Once you have created your environment, be sure to **activate** it before instal
 You can do this through your `GitBash` (Windows) or terminal (MacOS / Linux):
 
 ```bash
-$ conda create -n assignment-checker-environment -y python=3.10
+conda create -n assignment-checker-environment -y python=3.10
 ```
 
 To install the assignment checker into this environment, you can then run
@@ -87,7 +87,8 @@ You can then direct the `assignment-checker` directly to the copy of the specifi
 
 #### GitHub Submissions (Experimental)
 
-**NOTE:** This feature is new this year and as such, highly experimental. If you make use of this feature, we'd be grateful if you [took a look at the issue][github-clone-feature-issue] tracking this feature.
+**NOTE:** This feature is new this year and as such, highly experimental.
+If you make use of this feature, we'd be grateful if you [took a look at the issue][github-clone-feature-issue] tracking this feature.
 
 If you have a working internet connection, you can ask the `assignment-checker` to fetch your submission directly from its GitHub repository.
 Note that:
