@@ -600,9 +600,9 @@ class Directory:
                 fatal, warnings, _ = subdir.check_against_directory(
                     directory / pos_name, do_not_set_name=True
                 )
-                if (fatal is None) and (warnings is None):
+                if (not fatal) and (not warnings):
                     compatible_directories.append(pos_name)
-                if fatal is None:
+                if not fatal:
                     compatible_directories_with_warnings.append(pos_name)
 
             if subdir.is_optional:
@@ -622,8 +622,23 @@ class Directory:
         all_are_mapped = match_to_unique_assignments(
             {**possible_matches_compulsory, **possible_matches_optional}
         )
-        # Try and match without assigning to directories that threw warnings first,
-        # but if this isn't possible try again and allow for warnings.
+        # Try matching, allowing for optional directories to throw warnings
+        if not all_are_mapped:
+            all_are_mapped = match_to_unique_assignments(
+                {
+                    **possible_matches_compulsory,
+                    **possible_matches_optional_with_warnings,
+                }
+            )
+        # Try matching, allowing for compulsory directories to throw warnings
+        if not all_are_mapped:
+            all_are_mapped = match_to_unique_assignments(
+                {
+                    **possible_matches_compulsory_with_warnings,
+                    **possible_matches_optional,
+                }
+            )
+        # Try matching, allowing warnings anywhere.
         if not all_are_mapped:
             all_are_mapped = match_to_unique_assignments(
                 {
