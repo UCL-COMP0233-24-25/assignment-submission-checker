@@ -1,40 +1,91 @@
 {
-    "number": "01",
+    "number": "02",
     "year": 2024,
     "structure": {
-        "variable-name": "depot_locations*",
+        "variable-name": "delivery-planning-working-group-*",
         "git-root": true,
         "compulsory": [
-            "country.py",
-            "execution_time.py",
-            "test_country.py",
-            "utilities.py"
+            "pyproject.toml"
         ],
         "optional": [
-            "deciding_depot_location.ipynb",
-            "plotting_utilities.py"
+            "README.md"
         ],
+        "data-file-types": [
+            "LICENSE*",
+            "*.in",
+            "*.tox"
+        ],
+        ".github": {
+            "data-file-types": [
+                "*"
+            ]
+        },
+        "delivery_planning": {
+            "compulsory": [
+                "depot.py",
+                "dispatcher.py",
+                "horse.py",
+                "network.py",
+                "schedule.py",
+                "query.py"
+            ],
+            "optional": [
+                "script_fns.py"
+            ]
+        },
+        "docs": {
+            "data-file-types": [
+                "make.bat",
+                "Makefile*"
+            ],
+            "source": {
+                "data-file-patterns": [
+                    "conf.py",
+                    "*.md",
+                    "*.rst"
+                ],
+                "_possible_source_subfolders": {
+                    "variable-name": "*",
+                    "data-file-patterns": [
+                        "*.md",
+                        "*.rst"
+                    ]
+                },
+                "_static": {
+                    "data-file-patterns": [
+                        "*"
+                    ]
+                },
+                "_templates": {
+                    "data-file-patterns": [
+                        "*"
+                    ]
+                }
+            }
+        },
         "report": {
             "compulsory": [
                 "report.md",
-                "nna_execution_times.png"
+                "issues.png",
+                "prs.png",
+                "complete_execution_time.py",
+                "complete_execution_time.pdf",
+                "interval_time_experiments.py",
+                "interval_times.pdf",
+                "workhorse.py",
+                "workhorse.pdf"
             ],
             "optional": [
                 "AIUsage.md",
                 "Feedback.md"
             ]
         },
-        "data": {
-            "optional": [
-                "locations.csv"
-            ],
+        "tests": {
             "data-file-types": [
-                "*.csv"
-            ]
-        },
-        ".github": {
-            "data-file-types": [
-                "*"
+                "conftest.py",
+                "test*.py",
+                "*.yaml",
+                "*.json"
             ]
         }
     }
