@@ -60,7 +60,7 @@ Once the `assignment-checker` is installed, you can invoke it from the command-l
 
 ```bash
 (assignment-checker-environment) $ assignment-checker --help
-usage: assignment-checker [-h] [-g] [-l] [-q] [-v] [-o OUTPUT_FILE] assignment submission
+usage: assignment-checker [-h] [-g] [-l] [-q] [-v] [-o OUTPUT_FILE] assignment submission [--ignore-unexpected [PATTERNS ...]]
 ```
 
 Make sure that you have the environment you installed the `assignment-checker` into activated, otherwise you will get a command not found error.

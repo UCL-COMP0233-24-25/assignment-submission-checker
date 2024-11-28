@@ -52,11 +52,11 @@ def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -
 
     As such, for each entry in warnings, it is necessary for us to:
 
-    - Split the string on newline characters, and strip every resulting newline.
-    - If the first such split string matches the pattern 'The following files were found in \*, but were not expected:', then we are dealing with a list of unexpected files.
-    - Save the pattern that was matched to the \*, as it's our file path, and we need it for pattern matching.
-    - For each remaining line that we've split, check if the file name + the directory we're currently in matches any of the patterns given to us. Those patterns that match are removed.
-    - Return the same warning only containing the non-filtered files. If no files survived filtering, remove the warning.
+    1. Split the string on newline characters, and strip every resulting newline.
+    2. If the first such split string matches the pattern 'The following files were found in \*, but were not expected:', then we are dealing with a list of unexpected files.
+    3. Save the pattern that was matched to the \*, as it's our file path, and we need it for pattern matching.
+    4. For each remaining line that we've split, check if the file name + the directory we're currently in matches any of the patterns given to us. Those patterns that match are removed.
+    5. Return the same warning only containing the non-filtered files. If no files survived filtering, remove the warning.
 
     """
     warnings_header = "The following files were found in *, but were not expected:"
