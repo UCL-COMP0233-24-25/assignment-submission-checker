@@ -145,6 +145,22 @@ The hook will also attempt to fix any mistakes it finds, though you will need to
 </div>
 <p>to run pre-commit across all files in the repository at any time.</p>
 </section>
+<section id="testing">
+<h3>Testing<a class="headerlink" href="#testing" title="Link to this heading">¶</a></h3>
+<p>Our test suite is designed to <a class="reference external" href="https://tox.wiki/en/4.23.2/index.html">run with <code class="docutils literal notranslate"><span class="pre">tox</span></code></a>, though it can also be invoked by running <code class="docutils literal notranslate"><span class="pre">pytest</span></code> and pointing it to the <code class="docutils literal notranslate"><span class="pre">tests</span></code> folder.
+Note that if you do the latter, you might want to first <a class="reference internal" href="#integration-test">configure the <code class="docutils literal notranslate"><span class="pre">integration-test</span></code></a>, or simply ignore the result of this test.</p>
+<section id="integration-test">
+<h4>Integration Test<a class="headerlink" href="#integration-test" title="Link to this heading">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">tests/integration-test</span></code> subfolder contains a configurable integration test that developers can use to run the entire analysis pipeline, but in a way that is compatible with a debugger such as <code class="docutils literal notranslate"><span class="pre">debugpy</span></code>.
+To configure this test, you should:</p>
+<ul class="simple">
+<li><p>Setup the <code class="docutils literal notranslate"><span class="pre">tests/integration-test/inputs</span></code> folder with your assignment scheme and submission, if these are needed. The integration test can cope with both local schemes and submissions, as well as fetching schemes or repositories from GitHub.</p></li>
+<li><p>Add a fixture to <code class="docutils literal notranslate"><span class="pre">tests/integration-test/test_integration.py</span></code> that defines the arguments you want to pass to <code class="docutils literal notranslate"><span class="pre">cli_main:main</span></code>.</p></li>
+</ul>
+<p>The file comes pre-configured with some default settings to get you started, though the contents of the <code class="docutils literal notranslate"><span class="pre">tests/integration-test/inputs</span></code> folder are deliberately ignored by the repository.
+Likewise, you should direct any outputs you need from this integration test to <code class="docutils literal notranslate"><span class="pre">tests/integration-test/outputs</span></code>, which is also ignored by the repository.</p>
+</section>
+</section>
 </section>
 <section id="building-the-documentation">
 <h2>Building the Documentation<a class="headerlink" href="#building-the-documentation" title="Link to this heading">¶</a></h2>
