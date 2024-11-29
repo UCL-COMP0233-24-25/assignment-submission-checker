@@ -231,7 +231,7 @@ def provide_tmp_directory(
     where: Optional[Path] = None,
 ) -> Callable[[Callable[[Any], Any]], Callable[[Any], Any]]:
     """
-    Wraps the execution of a function with the creation and optional teardown of a
+    Wraps the execution of a function with the creation and optional tear-down of a
     temporary directory, that can be optionally passed to the wrapped function.
 
     :param clean_on_error: If True, the temporary directory that is created will be removed if
