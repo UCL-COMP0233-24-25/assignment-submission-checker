@@ -15,7 +15,7 @@ class LogType(IntEnum):
     WARN_GIT = 1
     WARN_UNEXPECTED = 2
     WARN_NOT_FOUND = 3
-    INFO = 4
+    INFO = 4  # TSTK distinguish more types here to avoid string parsing as much as possible. Could also do this with the FATAL things
 
 
 @dataclass

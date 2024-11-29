@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .directory import Directory, DirectoryDict
-from .utils import AssignmentCheckerError, copy_tree, filter_for_manual_ignores
+from .utils import AssignmentCheckerError, copy_tree
 
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
@@ -202,11 +202,8 @@ class Assignment:
             *self.git_allowable_branches,
         )
 
-        return
         # Filter warnings gathered for any file patterns that we have been told to ignore
-        # if ignore_extra_files:
-        #     warnings = filter_for_manual_ignores(warnings, ignore_extra_files)
+        if ignore_extra_files:
+            check_log.ignore_unexpected_files(ignore_extra_files, relative_to=submission)
 
-        # # Parse the output into a string,
-        # # and return
-        # return self.parse_into_output(fatal, warnings, information)
+        return check_log.parse()
