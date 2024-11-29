@@ -3,17 +3,22 @@ from __future__ import annotations
 import fnmatch
 import os
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterator, List, Optional, Set, Tuple, TypeAlias
+from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, TypeAlias
 
 import git
 
-from .git_utils import (
+from assignment_submission_checker.git_utils import (
     GIT_ROOT_PATTERNS,
     is_clean,
     is_git_repo,
     switch_to_main_if_possible,
 )
-from .utils import AssignmentCheckerError, match_to_unique_assignments
+from assignment_submission_checker.logging.entries import LogEntry, LogType
+from assignment_submission_checker.logging.logger import Logger
+from assignment_submission_checker.utils import (
+    AssignmentCheckerError,
+    match_to_unique_assignments,
+)
 
 DirectoryDict: TypeAlias = Dict[str, Any]
 
@@ -220,9 +225,8 @@ class Directory:
         self,
         directory: Path,
         do_not_set_name: bool = False,
-        root_submission_dir: Optional[Path] = None,
         *substitutes_for_main_branch: str,
-    ) -> Tuple[AssignmentCheckerError | None, List[str], List[str]]:
+    ) -> Logger:
         """
         Given a directory on the machine, determine if the contents of the directory are compatible with
         the expected setup of this Directory instance.
@@ -286,128 +290,98 @@ class Directory:
         `substitutes_for_main_branch` should be a sequence of branch names that, if `main` is not present in
         the expected git repository, will be used instead.
         """
-        WARNING = []
-        INFORMATION = []
+        logger = Logger(current_directory=directory)
 
         if not directory.is_dir():
-            return AssignmentCheckerError(f"Is not a directory: {directory}"), WARNING, INFORMATION
+            logger.add_entry(AssignmentCheckerError(f"Is not a directory: {directory}"))
+            return logger
 
         # Check name
         name_before = self.name
         if not self.check_name(directory.stem, do_not_set_name=do_not_set_name):
             if self.variable_name:
-                return (
+                logger.add_entry(
                     AssignmentCheckerError(
-                        f"Directory '{directory.stem}' does not have the expected form (expected to match '{self.name_pattern}')."
-                    ),
-                    WARNING,
-                    INFORMATION,
+                        f"Directory '{directory.stem}' does not have the expected form (expected to match '{self.name_pattern}').",
+                    )
                 )
+                return logger
             else:
-                return (
+                logger.add_entry(
                     AssignmentCheckerError(
                         f"Directory {self.name} expected, but got name {directory.stem}."
                     ),
-                    WARNING,
-                    INFORMATION,
                 )
+                return logger
         if self.name != name_before:
-            INFORMATION.append(f"Matched '{directory.stem}' to pattern '{self.name_pattern}'.")
+            logger.add_info(f"Matched '{directory.stem}' to pattern '{self.name_pattern}'.")
 
         # Check for presence (or absence) of git repository
-        error, warnings = self.check_git_repo(directory, *substitutes_for_main_branch)
-        if warnings:
-            WARNING.append(warnings)
-        if isinstance(error, AssignmentCheckerError):
-            return error, WARNING, INFORMATION
+        git_log = self.check_git_repo(directory, *substitutes_for_main_branch)
+        if git_log:
+            logger.add_entry(git_log)
+            if git_log.log_type == LogType.FATAL:
+                return logger
 
         # Check the files that this folder contains.
-        missing_compulsory, unexpected, optional = self.check_files(directory)
-        directory_location_reported_as = (
-            directory.stem
-            if root_submission_dir is None
-            else str(directory.relative_to(Path(root_submission_dir)))
-        )
-        if missing_compulsory:
-            WARNING.append(
-                f"Your submission is missing the following compulsory files (not found in {directory_location_reported_as}):\n"
-                + "".join(f"\t{f}\n" for f in missing_compulsory)
-            )
-        if unexpected:
-            WARNING.append(
-                f"The following files were found in {directory_location_reported_as}, but were not expected:\n"
-                + "".join(f"\t{f}\n" for f in unexpected)
-            )
-        if optional:
-            INFORMATION.append(
-                f"Found the following optional files inside {directory_location_reported_as}:\n"
-                + "".join(f"\t{f}\n" for f in optional)
-            )
+        file_log = self.check_files(directory)
+        logger.include(file_log)
 
         # Delegate further investigation down into subdirectories.
         # Handle non-variable-named directories.
         for subdir in self.fixed_name_subdirs:
-            FATAL, s_warning, s_information = self.investigate_subdir(
+            subdir_log = self.investigate_subdir(
                 directory / subdir.name,
                 subdir,
                 do_not_set_name=do_not_set_name,
-                root_submission_dir=root_submission_dir,
             )
-            WARNING.extend(s_warning)
-            INFORMATION.extend(s_information)
-            if FATAL is not None:
-                return FATAL, WARNING, INFORMATION
+            logger.include(subdir_log)
+            if logger.fatal:
+                return logger
 
         # Determine which folders on the filesystem represent the subdirectories that have variable names.
         matches, not_matched = self.match_variable_name_subdirs(directory)
         not_matched_and_compulsory = [s for s in not_matched if not s.is_optional]
         not_matched_and_optional = [s for s in not_matched if s.is_optional]
-        INFORMATION.append(
-            f"Matched the following directory patterns to the corresponding folders within {self.name}:\n"
-            + "".join(
-                f"\t{subdir.name_pattern} -> {dir_name}\n" for dir_name, subdir in matches.items()
-            )
+        logger.add_info(
+            "Matched directory patterns to folders",
+            *[f"{subdir.name_pattern} -> {dir_name}" for dir_name, subdir in matches.items()],
         )
         if not_matched_and_compulsory:
-            return (
-                AssignmentCheckerError(
-                    f"Could not identify subdirectories in {self.name} whose names match the following patterns:\n\t"
-                    + ", ".join(s.name_pattern for s in not_matched_and_compulsory)
-                ),
-                WARNING,
-                INFORMATION,
+            logger.add_entry(
+                AssignmentCheckerError("No subdirectories matching patterns"),
+                *[s.name_pattern for s in not_matched_and_compulsory],
             )
+            return logger
         if not_matched_and_optional:
-            INFORMATION.append(
-                f"The following optional folder patterns were not found in {self.name}:\n\t"
-                + ", ".join(s.name_pattern for s in not_matched_and_optional)
+            logger.add_info(
+                "Optional folder patterns not found",
+                *[s.name_pattern for s in not_matched_and_optional],
             )
         # Then, actually go into these directories to continue the checking and logging.
         for path, subdir in matches.items():
-            FATAL, s_warning, s_information = self.investigate_subdir(
+            subdir_log = self.investigate_subdir(
                 directory / path,
                 subdir,
                 do_not_set_name=do_not_set_name,
-                root_submission_dir=root_submission_dir,
             )
-            WARNING.extend(s_warning)
-            INFORMATION.extend(s_information)
-            if FATAL is not None:
-                return FATAL, WARNING, INFORMATION
+            logger.include(subdir_log)
+            if logger.fatal:
+                return logger
 
-        # Note that if we get to here, FATAL should be None.
-        # But including this return here in case future developments add additional checks between
-        # the variable-named directories and the end of the method.
-        return None, WARNING, INFORMATION
+        return logger
 
-    def check_files(self, directory: Path) -> Tuple[Set[str], Set[str], Set[str]]:
+    def check_files(self, directory: Path) -> Logger:
         """
-        Check the files that are present in the directory, returning:
+        Check the files that are present in the directory, returning a `Logger` whose entries
+        provide the following WARNINGS and INFORMATION:
 
-        1. A list of compulsory files that are missing.
-        2. A list of files that were not expected to be found.
-        3. A list of optional files that were found.
+        1. (WARNING) A list of compulsory files that are missing.
+        2. (WARNING) A list of files that were not expected to be found.
+        3. (INFORMATION) A list of optional files that were found.
         """
+        logger = Logger(current_directory=directory)
+
         files = set(f for f in os.listdir(directory) if os.path.isfile(directory / f))
 
         missing_compulsory = set(self.compulsory) - files
@@ -430,81 +404,79 @@ class Directory:
 
         optional = (files - unexpected - set(self.compulsory)).union(git_files)
 
-        return missing_compulsory, unexpected, optional
+        if missing_compulsory:
+            logger.add_entry(LogType.WARN_NOT_FOUND, *missing_compulsory)
+        if unexpected:
+            logger.add_entry(LogType.WARN_UNEXPECTED, *unexpected)
+        if optional:
+            logger.add_info(*optional)
+        return logger
 
-    def check_git_repo(
-        self, directory: Path, *allowable_other_branches: str
-    ) -> Tuple[AssignmentCheckerError | None, str | None]:
+    def check_git_repo(self, directory: Path, *allowable_other_branches: str) -> LogEntry:
         """
-        Check whether the folder on the filesystem is (or is not) a git repository, as expected by the instance.
+        Check whether the `directory` on the filesystem is (or is not) a git repository, as expected by the instance.
 
-        The method returns two values, in the following order.
+        The method returns a `LogEntry`, which can either be a WARNING or an ERROR.
+        A FATAL entry is logged in the following cases:
 
-        1. An AssignmentCheckerError (corresponding to a FATAL error in check_directories)
-        in the following cases (otherwise None):
-            - The instance expects a git repository on the filesystem, but does not detect one.
-            - The instance expects a git repository on the filesystem, and a repository is present but...
-                - There are untracked files in the repository.
-                - There are unstaged changes to files in the repository.
-                - There are uncommitted changes in the repository.
-                - The repository could not checkout `main` or another of the `allowable_other_branches`.
-            - The instance does not expect a git repository on the filesystem, but there is one.
-        2. A string containing WARNING information, that can be passed back to `check_directories`.
-            - None is returned if there are no warnings to record.
+        - The instance expects a git repository on the filesystem, but does not detect one.
+        - The instance expects a git repository on the filesystem, and a repository is present but...
+            - There are untracked files in the repository.
+            - There are unstaged changes to files in the repository.
+            - There are uncommitted changes in the repository.
+            - The repository could not checkout `main` or another of the `allowable_other_branches`.
+        - The instance does not expect a git repository on the filesystem, but there is one.
+
+        A WARNING is logged if the repository had to be checked out to switch to an allowable branch.
+
+        If there are no problems, `None` is returned.
         """
         warning_info = None
-
         i_am_a_git_repo = is_git_repo(directory)
+
         if self.git_root:
             if not i_am_a_git_repo:
-                return (
-                    AssignmentCheckerError(f"Git repository not found at {directory}."),
-                    None,
+                return LogEntry(
+                    AssignmentCheckerError("Git repository not found"),
+                    where=directory,
                 )
 
             repo = git.Repo(directory)
 
             # Check working tree
             untracked_files, unstaged_files, uncommitted_files = is_clean(repo)
+            working_tree_error, content = None, None
             if untracked_files:
-                return (
-                    AssignmentCheckerError(
-                        f"You have untracked changes in your git repository: {untracked_files}"
-                    ),
-                    None,
-                )
+                working_tree_error = "Untracked changes present in git repository"
+                content = untracked_files
             elif unstaged_files:
-                return (
-                    AssignmentCheckerError(
-                        f"You have unstaged changes in your git repository: {unstaged_files}"
-                    ),
-                    None,
-                )
+                working_tree_error = "Unstaged changes present in git repository"
+                content = unstaged_files
             elif uncommitted_files:
-                return (
-                    AssignmentCheckerError(
-                        f"You have uncommitted changes in your git repository: {unstaged_files}"
-                    ),
-                    None,
+                working_tree_error = "Uncommitted changes present in git repository"
+                content = uncommitted_files
+            if working_tree_error:
+                return LogEntry(
+                    AssignmentCheckerError(working_tree_error), where=directory, content=content
                 )
 
             # Switch to marking branch
             try:
                 warning_info = switch_to_main_if_possible(repo, *allowable_other_branches)
+                warning_info = LogEntry(LogType.WARN_GIT, where=directory, content=[warning_info])
+                repo.close()
             except AssignmentCheckerError as e:
-                return e, None
+                repo.close()
+                return LogEntry(e, where=directory)
 
-            # Close repo to not interfere with other programs
-            repo.close()
         elif i_am_a_git_repo:  # === (not self.git_repo and i_am_a_git_repo)
-            return (
+            return LogEntry(
                 AssignmentCheckerError(
-                    f"Git repository found at {directory}, which is not the expected location."
-                ),
-                None,
+                    "Git repository root found at unexpected location", where=directory
+                )
             )
 
-        return None, warning_info
+        return warning_info
 
     def check_name(self, directory_name: str, do_not_set_name: bool = False) -> bool:
         """
@@ -535,8 +507,7 @@ class Directory:
         path_to_subdir: Path,
         subdir: Directory,
         do_not_set_name: bool = False,
-        root_submission_dir: Optional[Path] = None,
-    ) -> Tuple[AssignmentCheckerError | None, List[str], List[str]]:
+    ) -> Logger:
         """
         Essentially wraps check_directory when called on a subdirectory on the instance.
         This has utility within check_directory() as we can refactor out the body of two `for` loops
@@ -550,33 +521,25 @@ class Directory:
 
         The returned values, and remaining arguments, are identical to those of `check_directory`.
         """
-        warning = []
-        information = []
+        logger = Logger(current_directory=path_to_subdir.parent)
 
         if not path_to_subdir.is_dir():
             if subdir.is_optional:
-                information.append(
-                    f"Optional subfolder '{subdir.name}' of '{self.name}' not found."
-                )
-                return None, warning, information
+                logger.add_info(f"Optional subfolder '{subdir.name}' not found")
+                return logger
             else:
-                return (
-                    AssignmentCheckerError(
-                        f"Expected subdirectory '{subdir.name}' to be present in '{self.name}', but it is not."
-                    ),
-                    warning,
-                    information,
+                logger.add_entry(
+                    AssignmentCheckerError(f"Compulsory subdirectory '{subdir.name}' not found")
                 )
+                return logger
 
         # Delegate checking to subdirectory
-        FATAL, s_warning, s_information = subdir.check_against_directory(
+        subdir_log = subdir.check_against_directory(
             path_to_subdir,
             do_not_set_name=do_not_set_name,
-            root_submission_dir=root_submission_dir,
         )
-        warning.extend(s_warning)
-        information.extend(s_information)
-        return FATAL, warning, information
+        logger.include(subdir_log)
+        return logger
 
     def match_variable_name_subdirs(
         self, directory: Path
@@ -615,12 +578,10 @@ class Directory:
             compatible_directories: List[str] = []
             compatible_directories_with_warnings: List[str] = []
             for pos_name in possible_names:
-                fatal, warnings, _ = subdir.check_against_directory(
-                    directory / pos_name, do_not_set_name=True
-                )
-                if (not fatal) and (not warnings):
+                dir_log = subdir.check_against_directory(directory / pos_name, do_not_set_name=True)
+                if (not dir_log.fatal) and (not dir_log.warnings):
                     compatible_directories.append(pos_name)
-                if not fatal:
+                if not dir_log.fatal:
                     compatible_directories_with_warnings.append(pos_name)
 
             if subdir.is_optional:

@@ -5,11 +5,14 @@ from enum import IntEnum
 from pathlib import Path
 from typing import List
 
+from assignment_submission_checker.utils import AssignmentCheckerError
+
 
 class LogType(IntEnum):
     """ """
 
-    FATAL = 1
+    FATAL = 0
+    WARN_GIT = 1
     WARN_UNEXPECTED = 2
     WARN_NOT_FOUND = 3
     INFO = 4
@@ -26,7 +29,7 @@ class LogEntry:
     """
 
     log_type: LogType
-    where: Path = Path()
+    where: Path
     content: List[str] = field(default_factory=lambda: [])
 
     def __add__(self, other: LogEntry) -> LogEntry:
@@ -52,13 +55,22 @@ class LogEntry:
 
     def __post_init__(self) -> None:
         """
+        If log_type is an AssignmentCheckerError, then create a FATAL instance from it.
+
+        Otherwise;
         - Cast to expected types, including making a clean reference for `content`.
         - Strip whitespace from content entries.
         - Remove duplicates from content entries.
         - Sorts content into alphabetical order.
         """
-        if self.log_type not in LogType:
-            raise ValueError(f"{self.log_type} is not a LogType")
+        # Create from an AssignmentCheckerError if provided.
+        if isinstance(self.log_type, AssignmentCheckerError):
+            self.content.insert(0, str(self.log_type))
+            self.log_type = LogType.FATAL
+        else:
+            # This will raise a TypeError if casting cannot occur, as we expect.
+            self.log_type = LogType(self.log_type)
+
         self.where = Path(self.where)
 
         if isinstance(self.content, str):

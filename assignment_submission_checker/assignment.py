@@ -196,17 +196,17 @@ class Assignment:
         submission = copy_tree(submission_dir, tmp_dir, into=True)
 
         # Check the submission content
-        fatal, warnings, information = self.directory_structure.check_against_directory(
+        check_log = self.directory_structure.check_against_directory(
             submission,
             do_not_set_name=False,
-            root_submission_dir=submission,
             *self.git_allowable_branches,
         )
 
+        return
         # Filter warnings gathered for any file patterns that we have been told to ignore
-        if ignore_extra_files:
-            warnings = filter_for_manual_ignores(warnings, ignore_extra_files)
+        # if ignore_extra_files:
+        #     warnings = filter_for_manual_ignores(warnings, ignore_extra_files)
 
-        # Parse the output into a string,
-        # and return
-        return self.parse_into_output(fatal, warnings, information)
+        # # Parse the output into a string,
+        # # and return
+        # return self.parse_into_output(fatal, warnings, information)

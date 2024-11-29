@@ -150,13 +150,13 @@ def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> s
     if repo.active_branch.name == "main":
         return
     elif "main" in [r.name for r in repo.references]:
-        warning_text = "Repository was not on the main branch, switching now..."
+        warning_text = "Repository was not on the main branch"
         correct_ref = "main"
     else:
         # Attempt to switch to any of the other available references.
         for name in allowable_other_names:
             if name in repo.references:
-                warning_text = f"Repository does not have a main branch, but found {name}, which is an acceptable alternative. Switching now..."
+                warning_text = f"Repository does not have a main branch, but found {name}, which is an acceptable alternative."
                 correct_ref = name
                 break
 
