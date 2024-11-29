@@ -26,7 +26,7 @@ class LogEntry:
     """
 
     log_type: LogType
-    where: Path
+    where: Path = Path()
     content: List[str] = field(default_factory=lambda: [])
 
     def __add__(self, other: LogEntry) -> LogEntry:
@@ -37,11 +37,22 @@ class LogEntry:
         the two values cannot be summed.
         """
         if self._same_reference(other):
-            return self.__class__(self.log_type, self.where, self.content + other.content)
+            return self.__class__(
+                self.log_type, where=self.where, content=self.content + other.content
+            )
+        elif self.log_type != other.log_type:
+            err_str = (
+                "Log types are not compatible " f"(self: {self.log_type}, other {other.log_type})"
+            )
+        else:
+            err_str = (
+                "Logs do not refer to same location " f"(self {self.where}, other {other.where})"
+            )
+        raise TypeError(err_str)
 
     def __post_init__(self) -> None:
         """
-        - Casts to expected types for consistency.
+        - Cast to expected types, including making a clean reference for `content`.
         - Strip whitespace from content entries.
         - Remove duplicates from content entries.
         - Sorts content into alphabetical order.
