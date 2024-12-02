@@ -4,7 +4,7 @@ from typing import List, Optional, Set
 import pytest
 
 from assignment_submission_checker.directory import Directory
-from assignment_submission_checker.utils import AssignmentCheckerError
+from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
 
 
 @pytest.mark.parametrize(

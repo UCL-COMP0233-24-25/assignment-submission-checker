@@ -4,8 +4,9 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Iterable, List, Optional
 
-from assignment_submission_checker.logging.entries import LogEntry, LogType
-from assignment_submission_checker.utils import AssignmentCheckerError
+from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
+from assignment_submission_checker.logging.log_entry import LogEntry
+from assignment_submission_checker.logging.log_types import LogType
 
 
 class Logger:
@@ -137,5 +138,5 @@ class Logger:
         self.entries.extend(other.entries)
 
     def parse(self) -> str:
-        """TSTK FIXME!!!"""
+        """TSTK FIXME!!! Also consider the entries refactoring first to make your life easier"""
         return ""

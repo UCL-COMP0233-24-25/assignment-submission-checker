@@ -4,8 +4,8 @@ from typing import List
 
 import pytest
 
-from assignment_submission_checker.logging.entries import LogEntry, LogType
-from assignment_submission_checker.utils import AssignmentCheckerError
+from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
+from assignment_submission_checker.logging.log_entry import LogEntry, LogType
 
 
 def test_init() -> None:

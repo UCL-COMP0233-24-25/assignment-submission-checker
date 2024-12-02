@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .directory import Directory, DirectoryDict
-from .utils import AssignmentCheckerError, copy_tree
+from .utils import copy_tree
 
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
@@ -114,66 +114,6 @@ class Assignment:
         self.id = str(id).rjust(3, "0")
         self.title = str(title)
         self.year = int(year)
-
-    def parse_into_output(
-        self,
-        fatal: AssignmentCheckerError | None,
-        warnings: List[str] = [],
-        information: List[str] = [],
-    ) -> str:
-        """
-        Parses the output from assignment validation into a human-readable string that reports
-        the findings of the validation process.
-        """
-        # Report should start with a header so it is clear which assignment spec the user
-        # is validating against.
-        main_heading = "Validation Report"
-        heading_str = f"{main_heading}\n{'-' * len(main_heading)}"
-
-        # If fatal is not None, it will be an AssignmentCheckerError which has prevented
-        # the validation from completing. It also implies the submission is in the wrong
-        # format. This should be clearly highlighted.
-        fatal_heading = "ERROR IN SUBMISSION FORMAT DETECTED"
-        fatal_str = ""
-        if fatal is not None:
-            fatal_str = (
-                f"{fatal_heading}\n"
-                f"{'-' * len(fatal_heading)}\n"
-                "The assignment checker encountered the following error in your submission format. "
-                "This has prevented complete validation of your assignment format.\n"
-                "\t" + str(fatal).replace("\n", "\n\t")
-            )
-
-        # Warnings and Information should be lists, obtained in sequence from recursing down
-        # the directory tree.
-        # As such, it should be possible to just combine these line-by-line.
-        warnings_heading = "Warnings"
-        warnings_str = ""
-        if warnings:
-            warnings_str = (
-                f"{warnings_heading}\n"
-                f"{'-' * len(warnings_heading)}\n"
-                "Encountered the following problems with your submission:\n\t"
-            ) + "\n".join(s.replace("\n", "\n\t") for s in warnings)
-
-        information_heading = "Information"
-        information_str = ""
-        if information:
-            information_str = (
-                f"{information_heading}\n"
-                f"{'-' * len(information_heading)}\n"
-                "Additional information gathered during the validation. "
-                "Information reported here does not invalidate the submission, "
-                "though you may wish to check you expect everything here to apply "
-                "to your submission.\n\t"
-            ) + "\n\t".join(s.replace("\n", "\n\t") for s in information)
-
-        if (not fatal_str) and (not warnings_str) and (not information_str):
-            return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
-        return (
-            "\n\n".join([s for s in [heading_str, fatal_str, warnings_str, information_str] if s])
-            + "\n"
-        )
 
     def validate_assignment(
         self, submission_dir: Path, tmp_dir: Path, ignore_extra_files: Optional[List[str]] = None

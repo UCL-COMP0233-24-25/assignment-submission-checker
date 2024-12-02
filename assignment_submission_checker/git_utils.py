@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import git
 
-from .utils import AssignmentCheckerError
+from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
 
 GIT_ROOT_PATTERNS = [
     "README*",

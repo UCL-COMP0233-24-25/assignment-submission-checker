@@ -13,12 +13,10 @@ from assignment_submission_checker.git_utils import (
     is_git_repo,
     switch_to_main_if_possible,
 )
-from assignment_submission_checker.logging.entries import LogEntry, LogType
+from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
+from assignment_submission_checker.logging.log_entry import LogEntry, LogType
 from assignment_submission_checker.logging.logger import Logger
-from assignment_submission_checker.utils import (
-    AssignmentCheckerError,
-    match_to_unique_assignments,
-)
+from assignment_submission_checker.utils import match_to_unique_assignments
 
 DirectoryDict: TypeAlias = Dict[str, Any]
 

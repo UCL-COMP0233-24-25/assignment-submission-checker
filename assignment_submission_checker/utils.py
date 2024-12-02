@@ -10,13 +10,6 @@ Obj = TypeVar("Object")
 Val = TypeVar("Value")
 
 
-class AssignmentCheckerError(Exception):
-    """
-    Allows us to define a custom exception type for when the assignment checker
-    encounters a genuine problem with the submission.
-    """
-
-
 def copy_tree(
     src: Path,
     dest: Path,

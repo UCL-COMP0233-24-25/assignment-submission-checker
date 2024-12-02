@@ -1,21 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import IntEnum
 from pathlib import Path
 from typing import List
 
-from assignment_submission_checker.utils import AssignmentCheckerError
-
-
-class LogType(IntEnum):
-    """ """
-
-    FATAL = 0
-    WARN_GIT = 1
-    WARN_UNEXPECTED = 2
-    WARN_NOT_FOUND = 3
-    INFO = 4  # TSTK distinguish more types here to avoid string parsing as much as possible. Could also do this with the FATAL things
+from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
+from assignment_submission_checker.logging.log_types import LogType
 
 
 @dataclass
