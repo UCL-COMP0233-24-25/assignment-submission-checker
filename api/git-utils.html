@@ -103,18 +103,17 @@ Otherwise, an error will be raised via reporting the invalid reference.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="assignment_submission_checker.git_utils.switch_to_main_if_possible">
-<span class="sig-name descname"><span class="pre">switch_to_main_if_possible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Repo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">allowable_other_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#assignment_submission_checker.git_utils.switch_to_main_if_possible" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">switch_to_main_if_possible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Repo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">allowable_other_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LogEntry</span></span></span><a class="headerlink" href="#assignment_submission_checker.git_utils.switch_to_main_if_possible" title="Link to this definition">¶</a></dt>
 <dd><p>Switches the main branch in the repo, if this is possible.</p>
 <p>If the main branch doesn’t exist, the method will attempt to switch to the
 allowable other names, in the order they are provided. It will switch to the first
 name that it finds a reference to.</p>
-<p>The returned value will be a string that describes any non-fatal warnings that were encountered when trying to
-switch the repository to the desired branch.
-Specifically:
+<p>The returned value will be a <cite>LogEntry</cite> describing the problems encountered when trying to
+switch the repository to the desired branch.</p>
+<p>Specifically:
 - If the repository was not already on the <cite>main</cite> branch.
 - If the repository has no <cite>main</cite> branch, but did have a branch corresponding to
 one of the <cite>allowable_other_names</cite>.</p>
-<p>Raises an AssignmentCheckerError if the branch cannot be switched to.</p>
 </dd></dl>
 
 </section>

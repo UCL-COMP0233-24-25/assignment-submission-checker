@@ -58,7 +58,7 @@ A top-level <code class="docutils literal notranslate"><span class="pre">Directo
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory_structure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#assignment_submission_checker.directory.Directory" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_against_directory">
-<span class="sig-name descname"><span class="pre">check_against_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_submission_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">substitutes_for_main_branch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils.html#assignment_submission_checker.utils.AssignmentCheckerError" title="assignment_submission_checker.utils.AssignmentCheckerError"><span class="pre">AssignmentCheckerError</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_against_directory" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">check_against_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">substitutes_for_main_branch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_against_directory" title="Link to this definition">¶</a></dt>
 <dd><p>Given a directory on the machine, determine if the contents of the directory are compatible with
 the expected setup of this Directory instance.</p>
 <p>This method will check (in order):</p>
@@ -128,41 +128,45 @@ the expected setup of this Directory instance.</p>
 </ul>
 </dd>
 </dl>
-<p>Returns the following values, in the order given, as a tuple:</p>
-<ol class="arabic simple">
-<li><p>An AssignmentCheckerError instance that reports the FATAL error encountered. This value is None if no FATAL errors were encountered.</p></li>
-<li><p>A list of strings that contain the text to be issued by WARNINGs that the algorithm wants to issue.</p></li>
-<li><p>A list of strings that contain the text to be issued as INFORMATION.</p></li>
-</ol>
-<p>Note that if the first return value is None, and the second is an empty list, then the Directory instance is
-compatible with the directory on the filesystem that was passed in.</p>
-<p><cite>do_not_set_name</cite> can be set to True to prevent variable-named folders from inheriting the pattern-matched
-name from the filesystem. This is exclusively used when attempting to match variable-named subdirectories
-to those on the filesystem.</p>
-<p><cite>substitutes_for_main_branch</cite> should be a sequence of branch names that, if <cite>main</cite> is not present in
-the expected git repository, will be used instead.</p>
+<p>A <cite>Logger</cite> is returned containing entries corresponding to the aforementioned information.
+Encountering a FATAL error will halt the analysis early.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> – The directory on the file system to compare this instance to.</p></li>
+<li><p><strong>do_not_set_name</strong> – If True, prevent variable-named folders from inheriting the pattern-matched</p></li>
+</ul>
+</dd>
+</dl>
+<p>name from the filesystem.
+This is exclusively used when attempting to match variable-named subdirectories to those on the filesystem.
+:param substitutes_for_main_branch: Branch names that, if <cite>main</cite> is not present in the expected git repository, may be used instead.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_files">
-<span class="sig-name descname"><span class="pre">check_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_files" title="Link to this definition">¶</a></dt>
-<dd><p>Check the files that are present in the directory, returning:</p>
+<span class="sig-name descname"><span class="pre">check_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_files" title="Link to this definition">¶</a></dt>
+<dd><p>Check the files that are present in the directory, returning a <cite>Logger</cite> whose entries
+provide the following WARNINGS and INFORMATION:</p>
 <ol class="arabic simple">
-<li><p>A list of compulsory files that are missing.</p></li>
-<li><p>A list of files that were not expected to be found.</p></li>
-<li><p>A list of optional files that were found.</p></li>
+<li><p>(WARNING) A list of compulsory files that are missing.</p></li>
+<li><p>(WARNING) A list of files that were not expected to be found.</p></li>
+<li><p>(INFORMATION) A list of optional files that were found.</p></li>
 </ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directory</strong> – The directory on the file system to compare this instance to.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.check_git_repo">
-<span class="sig-name descname"><span class="pre">check_git_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">allowable_other_branches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils.html#assignment_submission_checker.utils.AssignmentCheckerError" title="assignment_submission_checker.utils.AssignmentCheckerError"><span class="pre">AssignmentCheckerError</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_git_repo" title="Link to this definition">¶</a></dt>
-<dd><p>Check whether the folder on the filesystem is (or is not) a git repository, as expected by the instance.</p>
-<p>The method returns two values, in the following order.</p>
-<p>1. An AssignmentCheckerError (corresponding to a FATAL error in check_directories)
-in the following cases (otherwise None):</p>
-<blockquote>
-<div><ul class="simple">
+<span class="sig-name descname"><span class="pre">check_git_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">allowable_other_branches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LogEntry</span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.check_git_repo" title="Link to this definition">¶</a></dt>
+<dd><p>Check whether the <cite>directory</cite> on the filesystem is (or is not) a git repository, as expected by the instance.</p>
+<p>The method returns a <cite>LogEntry</cite>, which can either be a WARNING or an ERROR.
+A FATAL entry is logged in the following cases:</p>
+<ul class="simple">
 <li><p>The instance expects a git repository on the filesystem, but does not detect one.</p></li>
 <li><dl class="simple">
 <dt>The instance expects a git repository on the filesystem, and a repository is present but…</dt><dd><ul>
@@ -176,16 +180,16 @@ in the following cases (otherwise None):</p>
 </li>
 <li><p>The instance does not expect a git repository on the filesystem, but there is one.</p></li>
 </ul>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><dl class="simple">
-<dt>A string containing WARNING information, that can be passed back to <cite>check_directories</cite>.</dt><dd><ul class="simple">
-<li><p>None is returned if there are no warnings to record.</p></li>
+<p>A WARNING is logged if the repository had to be checked out to switch to an allowable branch.</p>
+<p>If there are no problems, <cite>None</cite> is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> – The directory on the file system to compare this instance to.</p></li>
+<li><p><strong>allowable_other_branches</strong> – Branch names that, if <cite>main</cite> is not present in the expected git repository, may be used instead.</p></li>
 </ul>
 </dd>
 </dl>
-</li>
-</ol>
 </dd></dl>
 
 <dl class="py method">
@@ -199,6 +203,14 @@ If self.variable_name is True:
 <p>In the case of a variable name and a matching directory name, the self.name
 property will be set to the matched value.
 This can be suppressed using the do_not_set_name input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory_name</strong> – Name of directory as it appears on the filesystem.</p></li>
+<li><p><strong>do_not_set_name</strong> – Do not update the instance’s name, if it is compatible with the directory on the file system.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -224,9 +236,10 @@ This can be suppressed using the do_not_set_name input.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="assignment_submission_checker.directory.Directory.investigate_subdir">
-<span class="sig-name descname"><span class="pre">investigate_subdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_submission_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils.html#assignment_submission_checker.utils.AssignmentCheckerError" title="assignment_submission_checker.utils.AssignmentCheckerError"><span class="pre">AssignmentCheckerError</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.investigate_subdir" title="Link to this definition">¶</a></dt>
-<dd><p>Essentially wraps check_directory when called on a subdirectory on the instance.
-This has utility within check_directory() as we can refactor out the body of two <cite>for</cite> loops
+<span class="sig-name descname"><span class="pre">investigate_subdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#assignment_submission_checker.directory.Directory" title="assignment_submission_checker.directory.Directory"><span class="pre">Directory</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_set_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="headerlink" href="#assignment_submission_checker.directory.Directory.investigate_subdir" title="Link to this definition">¶</a></dt>
+<dd><p>Essentially wraps check_directory when called on a subdirectory on the instance, returning a <cite>Logger</cite>
+instance akin to that method.</p>
+<p>This has utility within check_directory() as we can refactor out the body of two <cite>for</cite> loops
 into this function;
 - When we investigate subdirectories with fixed names,
 - When we investigate subdirectories with variable names,
@@ -234,6 +247,15 @@ after having matched these to folders on the filesystem.</p>
 <p>Note that <cite>path_to_subdir</cite> should point to the folder that is to be compared to <cite>subdir</cite>, unlike
 its counterpart in <cite>check_directories</cite> where <cite>directory</cite> points to the folder that is being compared to <cite>self</cite>.</p>
 <p>The returned values, and remaining arguments, are identical to those of <cite>check_directory</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_subdir</strong> – Path to folder on the filesystem to compare to.</p></li>
+<li><p><strong>subdir</strong> – Subdirectory of the instance to compare to.</p></li>
+<li><p><strong>do_not_set_name</strong> – See <cite>check_against_directory</cite>.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

@@ -50,14 +50,7 @@
   <section id="utility-functions">
 <h1>Utility Functions<a class="headerlink" href="#utility-functions" title="Link to this heading">¶</a></h1>
 <p>A collection of functions that have no other place in the package, and serve general utility purposes.</p>
-<dl class="py exception" id="module-assignment_submission_checker.utils">
-<dt class="sig sig-object py" id="assignment_submission_checker.utils.AssignmentCheckerError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AssignmentCheckerError</span></span><a class="headerlink" href="#assignment_submission_checker.utils.AssignmentCheckerError" title="Link to this definition">¶</a></dt>
-<dd><p>Allows us to define a custom exception type for when the assignment checker
-encounters a genuine problem with the submission.</p>
-</dd></dl>
-
-<dl class="py function">
+<dl class="py function" id="module-assignment_submission_checker.utils">
 <dt class="sig sig-object py" id="assignment_submission_checker.utils.copy_tree">
 <span class="sig-name descname"><span class="pre">copy_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">into</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#assignment_submission_checker.utils.copy_tree" title="Link to this definition">¶</a></dt>
 <dd><p>Copies the directory tree to the location on the filesystem.</p>
@@ -71,20 +64,6 @@ encounters a genuine problem with the submission.</p>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="assignment_submission_checker.utils.filter_for_manual_ignores">
-<span class="sig-name descname"><span class="pre">filter_for_manual_ignores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.utils.filter_for_manual_ignores" title="Link to this definition">¶</a></dt>
-<dd><p>Filter the list of warnings and remove any unexpected files that match the <cite>ignore_patterns</cite>.</p>
-<p>As such, for each entry in warnings, it is necessary for us to:</p>
-<ol class="arabic simple">
-<li><p>Split the string on newline characters, and strip every resulting newline.</p></li>
-<li><p>If the first such split string matches the pattern ‘The following files were found in *, but were not expected:’, then we are dealing with a list of unexpected files.</p></li>
-<li><p>Save the pattern that was matched to the *, as it’s our file path, and we need it for pattern matching.</p></li>
-<li><p>For each remaining line that we’ve split, check if the file name + the directory we’re currently in matches any of the patterns given to us. Those patterns that match are removed.</p></li>
-<li><p>Return the same warning only containing the non-filtered files. If no files survived filtering, remove the warning.</p></li>
-</ol>
 </dd></dl>
 
 <dl class="py function">
@@ -120,7 +99,7 @@ options.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="assignment_submission_checker.utils.provide_tmp_directory">
 <span class="sig-name descname"><span class="pre">provide_tmp_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clean_on_error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_on_success</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pass_dir_as_arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">where</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#assignment_submission_checker.utils.provide_tmp_directory" title="Link to this definition">¶</a></dt>
-<dd><p>Wraps the execution of a function with the creation and optional teardown of a
+<dd><p>Wraps the execution of a function with the creation and optional tear-down of a
 temporary directory, that can be optionally passed to the wrapped function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
