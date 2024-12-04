@@ -146,4 +146,4 @@ class Assignment:
         if ignore_extra_files:
             check_log.ignore_unexpected_files(ignore_extra_files, relative_to=submission)
 
-        return check_log.parse()
+        return check_log.parse(relative_to=submission)

@@ -9,6 +9,17 @@ from assignment_submission_checker.logging.log_entry import LogEntry
 from assignment_submission_checker.logging.log_types import LogType
 
 
+def heading(text: str) -> str:
+    return f"{text}\n{'-' * len(text)}\n"
+
+
+def relative_to_if_provided(path: Path, rel: Optional[Path] = None) -> Path:
+    """
+    Returns `path.relative_to(rel)` if `rel` is provided, otherwise returns `path`.
+    """
+    return path.relative_to(rel) if rel is not None else path
+
+
 class Logger:
     """
     Store entries as we go through the checking process
@@ -38,6 +49,13 @@ class Logger:
     def fatal(self) -> List[LogEntry]:
         """
         Return all FATAL entries in the instance as a list, or an empty list if there are none.
+        """
+        return [e for e in self.entries if e.log_type == LogType.FATAL]
+
+    @property
+    def information(self) -> List[LogEntry]:
+        """
+        Return all INFORMATION entries in the instance as a list, or an empty list if there are none.
         """
         return [e for e in self.entries if e.log_type == LogType.FATAL]
 
@@ -137,6 +155,52 @@ class Logger:
             raise TypeError(f"Can only include another Logger instance, not {type(other)}")
         self.entries.extend(other.entries)
 
-    def parse(self) -> str:
+    def parse(self, relative_to: Optional[Path] = None) -> str:
         """TSTK FIXME!!! Also consider the entries refactoring first to make your life easier"""
-        return ""
+        main_heading = heading("Validation Report")
+        fatal_str = ""
+        warnings_str = ""
+        info_str = ""
+
+        fatal_heading = heading("ERROR IN SUBMISSION FORMAT")
+        if self.fatal:
+            fatal_str = (
+                f"{fatal_heading}"
+                "The assignment checker encountered the following error in your submission format. "
+                "This has prevented complete validation of your assignment format.\n\n"
+            )
+            for fatal_log in self.fatal:
+                fatal_str += (
+                    f"In {relative_to_if_provided(fatal_log.where, relative_to)}: "
+                    + "".join(fatal_log.content)
+                    + "\n\n"
+                )
+
+        warnings_heading = heading("Warnings")
+        if self.warnings:
+            warnings_str = (
+                f"{warnings_heading}" "Encountered the following problems with your submission:\n\n"
+            )
+            for warning_log in self.warnings:
+                warnings_str += (
+                    f"In {relative_to_if_provided(warning_log.where, relative_to)}: "
+                    + "\n".join(warning_log.content)
+                    + "\n\n"
+                )
+
+        information_heading = heading("Information")
+        if self.information:
+            info_str = (
+                f"{information_heading}"
+                "Additional information gathered during the validation. "
+                "Information reported here does not invalidate the submission, "
+                "though you may wish to check you expect everything in here to apply to your submission.\n\n"
+            )
+            for info_log in self.information:
+                info_str += (
+                    f"In {relative_to_if_provided(info_log.where, relative_to)}: "
+                    + "\n\t".join(info_log.content)
+                    + "\n\n"
+                )
+
+        return "".join([s for s in [main_heading, fatal_str, warnings_str, info_str] if s])
