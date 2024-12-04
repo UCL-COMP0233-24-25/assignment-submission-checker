@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
-from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
 from assignment_submission_checker.logging.log_types import LogType
 
 
@@ -21,6 +20,11 @@ class LogEntry:
     log_type: LogType
     where: Path
     content: List[str] = field(default_factory=lambda: [])
+
+    @property
+    def content_as_bullets(self) -> str:
+        """Renders self.contents as items in a bulleted list."""
+        return "\n".join(f"- {item}" for item in self.content)
 
     def __add__(self, other: LogEntry) -> LogEntry:
         """
@@ -45,21 +49,12 @@ class LogEntry:
 
     def __post_init__(self) -> None:
         """
-        If log_type is an AssignmentCheckerError, then create a FATAL instance from it.
-
-        Otherwise;
         - Cast to expected types, including making a clean reference for `content`.
         - Strip whitespace from content entries.
         - Remove duplicates from content entries.
         - Sorts content into alphabetical order.
         """
-        # Create from an AssignmentCheckerError if provided.
-        if isinstance(self.log_type, AssignmentCheckerError):
-            self.content.insert(0, str(self.log_type))
-            self.log_type = LogType.FATAL
-        else:
-            # This will raise a TypeError if casting cannot occur, as we expect.
-            self.log_type = LogType(self.log_type)
+        self.log_type = LogType(self.log_type)
 
         self.where = Path(self.where)
 
@@ -96,3 +91,97 @@ class LogEntry:
         """
         self.content.extend(content_items)
         self._format_content()
+
+    def render(self, relative_to: Optional[Path] = None) -> str:
+        """
+        Converts the instance into a string that can be written to the output.
+
+        :param relative_to: Directory paths will be given relative to this directory, if provided.
+        """
+        where = self.where.relative_to(relative_to) if relative_to else self.where
+        output_str = ""
+
+        match self.log_type:
+            # FATALS
+            case LogType.FATAL_NOT_A_DIR:
+                output_str = f"{where} is not a directory"
+            case LogType.FATAL_DIR_NAME_MATCH_PATTERN:
+                output_str = f"Directory '{where}' does not have the expected form (expected to match '{where.parent}/{self.content[0]}')."
+            case LogType.FATAL_DIR_NAME_MATCH_FIXED:
+                output_str = (
+                    f"Directory ({where.parent}/){self.content[0]} expected, but got {where}."
+                )
+            case LogType.FATAL_NO_GIT_REPO:
+                output_str = f"No git repository found at {where}."
+            case LogType.FATAL_GIT_UNTRACKED:
+                output_str = (
+                    f"Untracked changes present in git repository ({where}):\n"
+                    + self.content_as_bullets
+                )
+            case LogType.FATAL_GIT_UNSTAGED:
+                output_str = (
+                    f"Unstaged changes present in git repository ({where}):\n"
+                    + self.content_as_bullets
+                )
+            case LogType.FATAL_GIT_UNCOMMITTED:
+                output_str = (
+                    f"Unstaged changes present in git repository ({where}):\n"
+                    + self.content_as_bullets
+                )
+            case LogType.FATAL_GIT_NO_VALID_BRANCH:
+                output_str = (
+                    f"Repository {where} has no 'main' branch, nor any acceptable alternative."
+                )
+            case LogType.FATAL_GIT_CHECKOUT_FAILED:
+                output_str = f"Could not checkout branch {self.content[0]} in repository {where}."
+            case LogType.FATAL_GIT_EXTRA_REPO:
+                output_str = f"Found a repository at {where}, but did not expect to."
+            case LogType.FATAL_NO_COMP_SUBDIR_MATCH_FIXED:
+                output_str = f"Compulsory subdirectory {where}/{self.content[0]} was not found."
+            case LogType.FATAL_NO_COMP_SUBDIR_MATCH:
+                output_str = (
+                    f"Failed to find compulsory subdirectories matching patterns in {where}:\n"
+                ) + self.content_as_bullets
+            # WARNINGS
+            case LogType.WARN_GIT_NOT_ON_MAIN:
+                output_str = f"Repository {where} was not on 'main' branch."
+            case LogType.WARN_GIT_USES_MAIN_ALT:
+                output_str = (
+                    f"Repository {where} does not have a 'main' branch,"
+                    f"but found {self.content[0]}, which is an acceptable alternative."
+                )
+            case LogType.WARN_FILE_NOT_FOUND:
+                output_str = (
+                    f"The following compulsory files were not found in {where}:\n"
+                    + self.content_as_bullets
+                )
+            case LogType.WARN_UNEXPECTED_FILE:
+                output_str = (
+                    f"The following files were found, but not expected, in {where}:\n"
+                    + self.content_as_bullets
+                )
+            # INFORMATION
+            case LogType.INFO_MATCHED_DIR_NAME:
+                output_str = (
+                    f"Matched '({where.parent}/){where.stem}' to pattern '{self.content[0]}'."
+                )
+            case LogType.INFO_FOUND_OPTIONAL_FILE:
+                output_str = (
+                    f"The following optional files were found in {where}:\n"
+                    + self.content_as_bullets
+                )
+            case LogType.INFO_OPTIONAL_DIR_NOT_FOUND:
+                output_str = f"Optional directory ({where}/){self.content[0]} not found."
+            case LogType.INFO_MATCHED_OPT_DIR_PATTERNS:
+                output_str = (
+                    f"Matched the following patterns to subdirectories in {where}:\n"
+                    + self.content_as_bullets
+                )
+            case LogType.INFO_OPTONAL_DIR_VARIABLE_NAME_NOT_FOUND:
+                output_str = (
+                    f"The following optional folder patterns were not found in {where}:\n"
+                    + self.content_as_bullets
+                )
+            case _:
+                raise TypeError(f"Rendering not supported for {self.log_type}.")
+        return output_str + "\n"

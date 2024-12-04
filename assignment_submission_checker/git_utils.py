@@ -4,7 +4,8 @@ from typing import List, Tuple
 
 import git
 
-from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
+from assignment_submission_checker.logging.log_entry import LogEntry
+from assignment_submission_checker.logging.log_types import LogType
 
 GIT_ROOT_PATTERNS = [
     "README*",
@@ -128,7 +129,7 @@ def switch_if_safe(repo: git.Repo, to_branch: str, create: bool = False) -> None
         raise RuntimeError(f"Reference {to_branch} not in repository references.")
 
 
-def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> str:
+def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> LogEntry:
     """
     Switches the main branch in the repo, if this is possible.
 
@@ -146,28 +147,26 @@ def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> s
     Raises an AssignmentCheckerError if the branch cannot be switched to.
     """
     correct_ref = None
-    warning_text = ""
+    warning_type = LogType.WARN
+
     if repo.active_branch.name == "main":
         return
     elif "main" in [r.name for r in repo.references]:
-        warning_text = "Repository was not on the main branch"
+        warning_type = LogType.WARN_GIT_NOT_ON_MAIN
         correct_ref = "main"
     else:
         # Attempt to switch to any of the other available references.
         for name in allowable_other_names:
             if name in repo.references:
-                warning_text = f"Repository does not have a main branch, but found {name}, which is an acceptable alternative."
+                warning_type = LogType.WARN_GIT_USES_MAIN_ALT
                 correct_ref = name
                 break
 
     if correct_ref is None:
-        raise AssignmentCheckerError(
-            "Could not find 'main' branch, or any other allowable reference."
-        )
+        return LogEntry(LogType.FATAL_GIT_NO_VALID_BRANCH)
     try:
         repo.git.checkout(correct_ref)
     except Exception as e:
-        raise AssignmentCheckerError(
-            f"Could not checkout reference {correct_ref} in repository."
-        ) from e
-    return warning_text
+        return LogEntry(LogType.FATAL_GIT_CHECKOUT_FAILED, correct_ref, str(e))
+
+    return LogEntry(warning_type, correct_ref)

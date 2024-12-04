@@ -13,7 +13,6 @@ from assignment_submission_checker.git_utils import (
     is_git_repo,
     switch_to_main_if_possible,
 )
-from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
 from assignment_submission_checker.logging.log_entry import LogEntry, LogType
 from assignment_submission_checker.logging.logger import Logger
 from assignment_submission_checker.utils import match_to_unique_assignments
@@ -291,34 +290,26 @@ class Directory:
         logger = Logger(current_directory=directory)
 
         if not directory.is_dir():
-            logger.add_entry(AssignmentCheckerError(f"Is not a directory: {directory}"))
+            logger.add_entry(LogType.FATAL_NOT_A_DIR)
             return logger
 
         # Check name
         name_before = self.name
         if not self.check_name(directory.stem, do_not_set_name=do_not_set_name):
             if self.variable_name:
-                logger.add_entry(
-                    AssignmentCheckerError(
-                        f"Directory '{directory.stem}' does not have the expected form (expected to match '{self.name_pattern}').",
-                    )
-                )
+                logger.add_entry(LogType.FATAL_DIR_NAME_MATCH_PATTERN, self.name_pattern)
                 return logger
             else:
-                logger.add_entry(
-                    AssignmentCheckerError(
-                        f"Directory {self.name} expected, but got name {directory.stem}."
-                    ),
-                )
+                logger.add_entry(LogType.FATAL_DIR_NAME_MATCH_FIXED, self.name)
                 return logger
         if self.name != name_before:
-            logger.add_info(f"Matched '{directory.stem}' to pattern '{self.name_pattern}'.")
+            logger.add_entry(LogType.INFO_MATCHED_DIR_NAME, self.name_pattern)
 
         # Check for presence (or absence) of git repository
         git_log = self.check_git_repo(directory, *substitutes_for_main_branch)
         if git_log:
             logger.add_entry(git_log)
-            if git_log.log_type == LogType.FATAL:
+            if git_log.log_type.is_fatal:
                 return logger
 
         # Check the files that this folder contains.
@@ -341,19 +332,20 @@ class Directory:
         matches, not_matched = self.match_variable_name_subdirs(directory)
         not_matched_and_compulsory = [s for s in not_matched if not s.is_optional]
         not_matched_and_optional = [s for s in not_matched if s.is_optional]
-        logger.add_info(
-            "Matched directory patterns to folders",
-            *[f"{subdir.name_pattern} -> {dir_name}" for dir_name, subdir in matches.items()],
-        )
+        if matches:
+            logger.add_entry(
+                LogType.INFO_MATCHED_OPT_DIR_PATTERNS,
+                *[f"{subdir.name_pattern} -> {dir_name}" for dir_name, subdir in matches.items()],
+            )
         if not_matched_and_compulsory:
             logger.add_entry(
-                AssignmentCheckerError("No subdirectories matching patterns"),
+                LogType.FATAL_NO_COMP_SUBDIR_MATCH,
                 *[s.name_pattern for s in not_matched_and_compulsory],
             )
             return logger
         if not_matched_and_optional:
-            logger.add_info(
-                "Optional folder patterns not found",
+            logger.add_entry(
+                LogType.INFO_OPTONAL_DIR_VARIABLE_NAME_NOT_FOUND,
                 *[s.name_pattern for s in not_matched_and_optional],
             )
         # Then, actually go into these directories to continue the checking and logging.
@@ -403,11 +395,11 @@ class Directory:
         optional = (files - unexpected - set(self.compulsory)).union(git_files)
 
         if missing_compulsory:
-            logger.add_entry(LogType.WARN_NOT_FOUND, *missing_compulsory)
+            logger.add_entry(LogType.WARN_FILE_NOT_FOUND, *missing_compulsory)
         if unexpected:
-            logger.add_entry(LogType.WARN_UNEXPECTED, *unexpected)
+            logger.add_entry(LogType.WARN_UNEXPECTED_FILE, *unexpected)
         if optional:
-            logger.add_info(*optional)
+            logger.add_entry(LogType.INFO_FOUND_OPTIONAL_FILE, *optional)
         return logger
 
     def check_git_repo(self, directory: Path, *allowable_other_branches: str) -> LogEntry:
@@ -435,44 +427,33 @@ class Directory:
         if self.git_root:
             if not i_am_a_git_repo:
                 return LogEntry(
-                    AssignmentCheckerError("Git repository not found"),
+                    LogType.FATAL_NO_GIT_REPO,
                     where=directory,
                 )
 
             repo = git.Repo(directory)
 
-            # Check working tree
+            # Check working tree, and catch errors before trying checkout
             untracked_files, unstaged_files, uncommitted_files = is_clean(repo)
-            working_tree_error, content = None, None
+            working_tree_error, wt_content = None, None
             if untracked_files:
-                working_tree_error = "Untracked changes present in git repository"
-                content = untracked_files
+                working_tree_error = LogType.FATAL_GIT_UNTRACKED
+                wt_content = untracked_files
             elif unstaged_files:
-                working_tree_error = "Unstaged changes present in git repository"
-                content = unstaged_files
+                working_tree_error = LogType.FATAL_GIT_UNSTAGED
+                wt_content = unstaged_files
             elif uncommitted_files:
-                working_tree_error = "Uncommitted changes present in git repository"
-                content = uncommitted_files
+                working_tree_error = LogType.FATAL_GIT_UNCOMMITTED
+                wt_content = uncommitted_files
             if working_tree_error:
-                return LogEntry(
-                    AssignmentCheckerError(working_tree_error), where=directory, content=content
-                )
+                return LogEntry(working_tree_error, where=directory, content=wt_content)
 
             # Switch to marking branch
-            try:
-                warning_info = switch_to_main_if_possible(repo, *allowable_other_branches)
-                warning_info = LogEntry(LogType.WARN_GIT, where=directory, content=[warning_info])
-                repo.close()
-            except AssignmentCheckerError as e:
-                repo.close()
-                return LogEntry(e, where=directory)
-
+            warning_info = switch_to_main_if_possible(repo, *allowable_other_branches)
+            warning_info.where = directory
+            repo.close()
         elif i_am_a_git_repo:  # === (not self.git_repo and i_am_a_git_repo)
-            return LogEntry(
-                AssignmentCheckerError(
-                    "Git repository root found at unexpected location", where=directory
-                )
-            )
+            return LogEntry(LogType.FATAL_GIT_EXTRA_REPO, where=directory)
 
         return warning_info
 
@@ -523,12 +504,10 @@ class Directory:
 
         if not path_to_subdir.is_dir():
             if subdir.is_optional:
-                logger.add_info(f"Optional subfolder '{subdir.name}' not found")
+                logger.add_entry(LogType.INFO_OPTIONAL_DIR_NOT_FOUND, subdir.name)
                 return logger
             else:
-                logger.add_entry(
-                    AssignmentCheckerError(f"Compulsory subdirectory '{subdir.name}' not found")
-                )
+                logger.add_entry(LogType.FATAL_NO_COMP_SUBDIR_MATCH_FIXED, subdir.name)
                 return logger
 
         # Delegate checking to subdirectory

@@ -4,13 +4,17 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Iterable, List, Optional
 
-from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
 from assignment_submission_checker.logging.log_entry import LogEntry
 from assignment_submission_checker.logging.log_types import LogType
 
 
-def heading(text: str) -> str:
-    return f"{text}\n{'-' * len(text)}\n"
+def heading(text: str, pad_above: int = 1) -> str:
+    """
+    Render a report heading.
+
+    :param pad_above: Pad this many empty newlines above the title.
+    """
+    return "\n" * pad_above + f"{text}\n{'-' * len(text)}\n"
 
 
 def relative_to_if_provided(path: Path, rel: Optional[Path] = None) -> Path:
@@ -50,21 +54,21 @@ class Logger:
         """
         Return all FATAL entries in the instance as a list, or an empty list if there are none.
         """
-        return [e for e in self.entries if e.log_type == LogType.FATAL]
+        return [e for e in self.entries if e.log_type.is_fatal]
 
     @property
     def information(self) -> List[LogEntry]:
         """
         Return all INFORMATION entries in the instance as a list, or an empty list if there are none.
         """
-        return [e for e in self.entries if e.log_type == LogType.FATAL]
+        return [e for e in self.entries if e.log_type.is_information]
 
     @property
     def warnings(self) -> List[LogEntry]:
         """
         Return all WARNINGS (of any kind) in the instance as a list, or an empty list if there are none.
         """
-        return [e for e in self.entries if e.log_type not in [LogType.FATAL, LogType.INFO]]
+        return [e for e in self.entries if e.log_type.is_warning]
 
     def __init__(self, *entries: LogEntry, current_directory: Optional[Path] = None) -> None:
         """
@@ -76,9 +80,7 @@ class Logger:
             raise ValueError("Pre-populated entries provided must be of type LogEntry")
         self.entries = list(entries)
 
-    def add_entry(
-        self, log_type: AssignmentCheckerError | LogEntry | LogType, *content: str, **kwargs
-    ) -> None:
+    def add_entry(self, log_type: LogEntry | LogType, *content: str, **kwargs) -> None:
         """
         Add an entry to the instance.
 
@@ -91,14 +93,6 @@ class Logger:
             self.entries.append(log_type)
         else:
             self.entries.append(LogEntry(log_type=log_type, content=content, **kwargs))
-
-    def add_info(self, *content: str, **kwargs) -> None:
-        """
-        Add a LogType.INFO entry to the instance, with the given content.
-
-        `kwargs` are passed to LogEntry.__init__.
-        """
-        self.add_entry(LogType.INFO, *content, **kwargs)
 
     def ignore_unexpected_files(
         self,
@@ -117,7 +111,7 @@ class Logger:
         """
         flag_for_removal = []
         for i, entry in enumerate(self.entries):
-            if entry.log_type == LogType.WARN_UNEXPECTED:
+            if entry.log_type == LogType.WARN_UNEXPECTED_FILE:
                 # Filter out ignore patterns, relative to given directory if necessary.
                 where = entry.where.relative_to(relative_to) if relative_to else entry.where
                 new_content = [
@@ -156,51 +150,25 @@ class Logger:
         self.entries.extend(other.entries)
 
     def parse(self, relative_to: Optional[Path] = None) -> str:
-        """TSTK FIXME!!! Also consider the entries refactoring first to make your life easier"""
-        main_heading = heading("Validation Report")
-        fatal_str = ""
-        warnings_str = ""
-        info_str = ""
+        """
+        Parse all log entries into the output format, returning the formatted string.
 
-        fatal_heading = heading("ERROR IN SUBMISSION FORMAT")
-        if self.fatal:
-            fatal_str = (
-                f"{fatal_heading}"
-                "The assignment checker encountered the following error in your submission format. "
-                "This has prevented complete validation of your assignment format.\n\n"
-            )
-            for fatal_log in self.fatal:
-                fatal_str += (
-                    f"In {relative_to_if_provided(fatal_log.where, relative_to)}: "
-                    + "".join(fatal_log.content)
-                    + "\n\n"
-                )
+        Output format provides a breakdown of FATAL, WARNINGS, and INFORMATION under three headings.
+        The log entries should already be sorted into the order they were created,
+        and thus be grouped in accordance with the directory tree.
 
-        warnings_heading = heading("Warnings")
-        if self.warnings:
-            warnings_str = (
-                f"{warnings_heading}" "Encountered the following problems with your submission:\n\n"
-            )
-            for warning_log in self.warnings:
-                warnings_str += (
-                    f"In {relative_to_if_provided(warning_log.where, relative_to)}: "
-                    + "\n".join(warning_log.content)
-                    + "\n\n"
-                )
+        :param relative_to: Directory paths will be given relative to the given path, if provided.
+        """
+        report_string = heading("Validation Report", pad_above=0)
 
-        information_heading = heading("Information")
-        if self.information:
-            info_str = (
-                f"{information_heading}"
-                "Additional information gathered during the validation. "
-                "Information reported here does not invalidate the submission, "
-                "though you may wish to check you expect everything in here to apply to your submission.\n\n"
-            )
-            for info_log in self.information:
-                info_str += (
-                    f"In {relative_to_if_provided(info_log.where, relative_to)}: "
-                    + "\n\t".join(info_log.content)
-                    + "\n\n"
-                )
+        for log_type, heading_text in zip(
+            ("fatal", "warnings", "information"),
+            ("FATAL: Errors in submission format", "WARNINGS", "INFORMATION"),
+        ):
+            entries: List[LogEntry] = getattr(self, log_type)
+            if entries:
+                report_string += heading(heading_text)
+                for entry in entries:
+                    report_string += entry.render(relative_to=relative_to)
 
-        return "".join([s for s in [main_heading, fatal_str, warnings_str, info_str] if s])
+        return report_string
