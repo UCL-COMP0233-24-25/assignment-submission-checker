@@ -271,26 +271,20 @@ class Directory:
             - When optional folders are not found within the submission.
             - When optional subfolders with variable names are not matched to a folder on the filesystem.
 
-        Returns the following values, in the order given, as a tuple:
+        A `Logger` is returned containing entries corresponding to the aforementioned information.
+        Encountering a FATAL error will halt the analysis early.
 
-        1. An AssignmentCheckerError instance that reports the FATAL error encountered. This value is None if no FATAL errors were encountered.
-        2. A list of strings that contain the text to be issued by WARNINGs that the algorithm wants to issue.
-        3. A list of strings that contain the text to be issued as INFORMATION.
-
-        Note that if the first return value is None, and the second is an empty list, then the Directory instance is
-        compatible with the directory on the filesystem that was passed in.
-
-        `do_not_set_name` can be set to True to prevent variable-named folders from inheriting the pattern-matched
-        name from the filesystem. This is exclusively used when attempting to match variable-named subdirectories
-        to those on the filesystem.
-
-        `substitutes_for_main_branch` should be a sequence of branch names that, if `main` is not present in
-        the expected git repository, will be used instead.
+        :param directory: The directory on the file system to compare this instance to.
+        :param do_not_set_name: If True, prevent variable-named folders from inheriting the pattern-matched
+        name from the filesystem.
+        This is exclusively used when attempting to match variable-named subdirectories to those on the filesystem.
+        :param substitutes_for_main_branch: Branch names that, if `main` is not present in the expected git repository, may be used instead.
         """
         logger = Logger(current_directory=directory)
 
         if not directory.is_dir():
             logger.add_entry(LogType.FATAL_NOT_A_DIR)
+        if logger.fatal:
             return logger
 
         # Check name
@@ -304,6 +298,8 @@ class Directory:
                 return logger
         if self.name != name_before:
             logger.add_entry(LogType.INFO_MATCHED_DIR_NAME, self.name_pattern)
+        if logger.fatal:
+            return logger
 
         # Check for presence (or absence) of git repository
         git_log = self.check_git_repo(directory, *substitutes_for_main_branch)
@@ -311,10 +307,14 @@ class Directory:
             logger.add_entry(git_log)
             if git_log.log_type.is_fatal:
                 return logger
+        if logger.fatal:
+            return logger
 
         # Check the files that this folder contains.
         file_log = self.check_files(directory)
         logger.include(file_log)
+        if logger.fatal:
+            return logger
 
         # Delegate further investigation down into subdirectories.
         # Handle non-variable-named directories.
@@ -369,6 +369,8 @@ class Directory:
         1. (WARNING) A list of compulsory files that are missing.
         2. (WARNING) A list of files that were not expected to be found.
         3. (INFORMATION) A list of optional files that were found.
+
+        :param directory: The directory on the file system to compare this instance to.
         """
         logger = Logger(current_directory=directory)
 
@@ -420,6 +422,9 @@ class Directory:
         A WARNING is logged if the repository had to be checked out to switch to an allowable branch.
 
         If there are no problems, `None` is returned.
+
+        :param directory: The directory on the file system to compare this instance to.
+        :param allowable_other_branches: Branch names that, if `main` is not present in the expected git repository, may be used instead.
         """
         warning_info = None
         i_am_a_git_repo = is_git_repo(directory)
@@ -469,6 +474,9 @@ class Directory:
         In the case of a variable name and a matching directory name, the self.name
         property will be set to the matched value.
         This can be suppressed using the do_not_set_name input.
+
+        :param directory_name: Name of directory as it appears on the filesystem.
+        :param do_not_set_name: Do not update the instance's name, if it is compatible with the directory on the file system.
         """
         if not self.variable_name:
             return directory_name == self.name
@@ -488,7 +496,9 @@ class Directory:
         do_not_set_name: bool = False,
     ) -> Logger:
         """
-        Essentially wraps check_directory when called on a subdirectory on the instance.
+        Essentially wraps check_directory when called on a subdirectory on the instance, returning a `Logger`
+        instance akin to that method.
+
         This has utility within check_directory() as we can refactor out the body of two `for` loops
         into this function;
         - When we investigate subdirectories with fixed names,
@@ -499,6 +509,10 @@ class Directory:
         its counterpart in `check_directories` where `directory` points to the folder that is being compared to `self`.
 
         The returned values, and remaining arguments, are identical to those of `check_directory`.
+
+        :param path_to_subdir: Path to folder on the filesystem to compare to.
+        :param subdir: Subdirectory of the instance to compare to.
+        :param do_not_set_name: See `check_against_directory`.
         """
         logger = Logger(current_directory=path_to_subdir.parent)
 
