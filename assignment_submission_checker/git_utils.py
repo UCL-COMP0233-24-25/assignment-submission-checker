@@ -137,17 +137,17 @@ def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> L
     allowable other names, in the order they are provided. It will switch to the first
     name that it finds a reference to.
 
-    The returned value will be a string that describes any non-fatal warnings that were encountered when trying to
+    The returned value will be a `LogEntry` describing the problems encountered when trying to
     switch the repository to the desired branch.
+
     Specifically:
     - If the repository was not already on the `main` branch.
     - If the repository has no `main` branch, but did have a branch corresponding to
     one of the `allowable_other_names`.
-
-    Raises an AssignmentCheckerError if the branch cannot be switched to.
     """
     correct_ref = None
     warning_type = LogType.WARN
+    where = repo.git.rev_parse("--show-toplevel")
 
     if repo.active_branch.name == "main":
         return
@@ -163,10 +163,18 @@ def switch_to_main_if_possible(repo: git.Repo, *allowable_other_names: str) -> L
                 break
 
     if correct_ref is None:
-        return LogEntry(LogType.FATAL_GIT_NO_VALID_BRANCH)
+        return LogEntry(LogType.FATAL_GIT_NO_VALID_BRANCH, where=where)
     try:
         repo.git.checkout(correct_ref)
     except Exception as e:
-        return LogEntry(LogType.FATAL_GIT_CHECKOUT_FAILED, correct_ref, str(e))
+        return LogEntry(
+            LogType.FATAL_GIT_CHECKOUT_FAILED,
+            [correct_ref, str(e)],
+            where=where,
+        )
 
-    return LogEntry(warning_type, correct_ref)
+    return LogEntry(
+        warning_type,
+        where,
+        [correct_ref],
+    )

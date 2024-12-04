@@ -4,7 +4,6 @@ from typing import List
 
 import pytest
 
-from assignment_submission_checker.logging.checker_error import AssignmentCheckerError
 from assignment_submission_checker.logging.log_entry import LogEntry, LogType
 
 
@@ -26,11 +25,6 @@ def test_init() -> None:
     content = ("0", "2", "1", "0", "3")
     formatted_content = ["0", "1", "2", "3"]
     assert LogEntry(LogType.FATAL, where=".", content=content).content == formatted_content
-
-    # Can be created from an AssignmentCheckerError
-    from_error = LogEntry(AssignmentCheckerError("Error message"), where=".")
-    assert from_error.log_type == LogType.FATAL
-    assert from_error.content == ["Error message"]
 
 
 @pytest.mark.parametrize(

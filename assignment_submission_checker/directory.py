@@ -455,7 +455,6 @@ class Directory:
 
             # Switch to marking branch
             warning_info = switch_to_main_if_possible(repo, *allowable_other_branches)
-            warning_info.where = directory
             repo.close()
         elif i_am_a_git_repo:  # === (not self.git_repo and i_am_a_git_repo)
             return LogEntry(LogType.FATAL_GIT_EXTRA_REPO, where=directory)
