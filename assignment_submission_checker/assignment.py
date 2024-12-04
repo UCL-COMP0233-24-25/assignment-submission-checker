@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .directory import Directory, DirectoryDict
-from .utils import AssignmentCheckerError, copy_tree, filter_for_manual_ignores
+from .utils import copy_tree
 
 DIR_STRUCTURE_KEY = "structure"
 GIT_BRANCH_KEY = "git-marking-branch"
@@ -115,66 +115,6 @@ class Assignment:
         self.title = str(title)
         self.year = int(year)
 
-    def parse_into_output(
-        self,
-        fatal: AssignmentCheckerError | None,
-        warnings: List[str] = [],
-        information: List[str] = [],
-    ) -> str:
-        """
-        Parses the output from assignment validation into a human-readable string that reports
-        the findings of the validation process.
-        """
-        # Report should start with a header so it is clear which assignment spec the user
-        # is validating against.
-        main_heading = "Validation Report"
-        heading_str = f"{main_heading}\n{'-' * len(main_heading)}"
-
-        # If fatal is not None, it will be an AssignmentCheckerError which has prevented
-        # the validation from completing. It also implies the submission is in the wrong
-        # format. This should be clearly highlighted.
-        fatal_heading = "ERROR IN SUBMISSION FORMAT DETECTED"
-        fatal_str = ""
-        if fatal is not None:
-            fatal_str = (
-                f"{fatal_heading}\n"
-                f"{'-' * len(fatal_heading)}\n"
-                "The assignment checker encountered the following error in your submission format. "
-                "This has prevented complete validation of your assignment format.\n"
-                "\t" + str(fatal).replace("\n", "\n\t")
-            )
-
-        # Warnings and Information should be lists, obtained in sequence from recursing down
-        # the directory tree.
-        # As such, it should be possible to just combine these line-by-line.
-        warnings_heading = "Warnings"
-        warnings_str = ""
-        if warnings:
-            warnings_str = (
-                f"{warnings_heading}\n"
-                f"{'-' * len(warnings_heading)}\n"
-                "Encountered the following problems with your submission:\n\t"
-            ) + "\n".join(s.replace("\n", "\n\t") for s in warnings)
-
-        information_heading = "Information"
-        information_str = ""
-        if information:
-            information_str = (
-                f"{information_heading}\n"
-                f"{'-' * len(information_heading)}\n"
-                "Additional information gathered during the validation. "
-                "Information reported here does not invalidate the submission, "
-                "though you may wish to check you expect everything here to apply "
-                "to your submission.\n\t"
-            ) + "\n\t".join(s.replace("\n", "\n\t") for s in information)
-
-        if (not fatal_str) and (not warnings_str) and (not information_str):
-            return f"{heading_str}\nSubmission format matches specifications, nothing further to report."
-        return (
-            "\n\n".join([s for s in [heading_str, fatal_str, warnings_str, information_str] if s])
-            + "\n"
-        )
-
     def validate_assignment(
         self, submission_dir: Path, tmp_dir: Path, ignore_extra_files: Optional[List[str]] = None
     ) -> str:
@@ -196,17 +136,14 @@ class Assignment:
         submission = copy_tree(submission_dir, tmp_dir, into=True)
 
         # Check the submission content
-        fatal, warnings, information = self.directory_structure.check_against_directory(
+        check_log = self.directory_structure.check_against_directory(
             submission,
             do_not_set_name=False,
-            root_submission_dir=submission,
             *self.git_allowable_branches,
         )
 
         # Filter warnings gathered for any file patterns that we have been told to ignore
         if ignore_extra_files:
-            warnings = filter_for_manual_ignores(warnings, ignore_extra_files)
+            check_log.ignore_unexpected_files(ignore_extra_files, relative_to=submission)
 
-        # Parse the output into a string,
-        # and return
-        return self.parse_into_output(fatal, warnings, information)
+        return check_log.parse(relative_to=submission)

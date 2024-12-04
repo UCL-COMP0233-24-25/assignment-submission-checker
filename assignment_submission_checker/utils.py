@@ -1,6 +1,4 @@
-import fnmatch
 import os
-import re
 import shutil
 import stat
 from copy import deepcopy
@@ -10,13 +8,6 @@ from typing import Any, Callable, Dict, List, Optional, Set, TypeVar
 
 Obj = TypeVar("Object")
 Val = TypeVar("Value")
-
-
-class AssignmentCheckerError(Exception):
-    """
-    Allows us to define a custom exception type for when the assignment checker
-    encounters a genuine problem with the submission.
-    """
 
 
 def copy_tree(
@@ -44,58 +35,6 @@ def copy_tree(
     shutil.copytree(src, dest, symlinks=False, dirs_exist_ok=False)
 
     return dest
-
-
-def filter_for_manual_ignores(warnings: List[str], ignore_patterns: List[str]) -> List[str]:
-    """
-    Filter the list of warnings and remove any unexpected files that match the `ignore_patterns`.
-
-    As such, for each entry in warnings, it is necessary for us to:
-
-    1. Split the string on newline characters, and strip every resulting newline.
-    2. If the first such split string matches the pattern 'The following files were found in \*, but were not expected:', then we are dealing with a list of unexpected files.
-    3. Save the pattern that was matched to the \*, as it's our file path, and we need it for pattern matching.
-    4. For each remaining line that we've split, check if the file name + the directory we're currently in matches any of the patterns given to us. Those patterns that match are removed.
-    5. Return the same warning only containing the non-filtered files. If no files survived filtering, remove the warning.
-
-    """
-    warnings_header = "The following files were found in *, but were not expected:"
-    filtered_warnings = []
-    for warning in warnings:
-        w = [text.strip() for text in warning.split("\n")]
-
-        match = re.fullmatch(fnmatch.translate(warnings_header), w[0])
-        if match:
-            matched_dir = (
-                match.group()
-                .removeprefix(warnings_header.split("*")[0])
-                .removesuffix(warnings_header.split("*")[1])
-            )
-
-            # For each file that this warning provides, if it matches any of the ignore patterns
-            # then we remove it from this warning
-            still_not_ignored = [
-                i + 1
-                for i, file in enumerate(w[1:])
-                if not any(
-                    fnmatch.fnmatch(f"{matched_dir}/{file.strip()}", pattern)
-                    for pattern in ignore_patterns
-                )
-                and file.strip()  # In case of trailing newlines or something
-            ]
-            if still_not_ignored:
-                # Include the warnings header, as it's still a valid warning.
-                still_not_ignored.insert(0, 0)
-                # Include the files that WERE NOT excluded by the ignore patterns.
-                new_warning = "\n".join(warning.split("\n")[i] for i in still_not_ignored)
-                # Include the new warning, post filters, in the output.
-                filtered_warnings.append(new_warning)
-        else:
-            # This warning was not an unexpected files warning,
-            # preserve it and then continue moving through the list of warnings.
-            filtered_warnings.append(warning)
-
-    return filtered_warnings
 
 
 def match_to_unique_assignments(possible_mappings: Dict[Obj, Set[Val]]) -> Dict[Obj, Val]:
@@ -231,7 +170,7 @@ def provide_tmp_directory(
     where: Optional[Path] = None,
 ) -> Callable[[Callable[[Any], Any]], Callable[[Any], Any]]:
     """
-    Wraps the execution of a function with the creation and optional teardown of a
+    Wraps the execution of a function with the creation and optional tear-down of a
     temporary directory, that can be optionally passed to the wrapped function.
 
     :param clean_on_error: If True, the temporary directory that is created will be removed if

@@ -4,7 +4,7 @@ from typing import List, Optional, Set
 import pytest
 
 from assignment_submission_checker.directory import Directory
-from assignment_submission_checker.utils import AssignmentCheckerError
+from assignment_submission_checker.logging.log_types import LogType
 
 
 @pytest.mark.parametrize(
@@ -102,8 +102,7 @@ def test_check_name(
         "setup_submission",
         "allowable_other_branches",
         "dir_to_compare",
-        "expect_error",
-        "expect_warning",
+        "expected_entry_type",
         "subdir_to_check",
     ],
     [
@@ -113,7 +112,6 @@ def test_check_name(
             {},
             [],
             "top-level-folder/my-git-submission",
-            None,
             None,
             "git-root-dir",
             id="Repo present, on main, no switch",
@@ -125,7 +123,6 @@ def test_check_name(
             [],
             "top-level-folder/my-git-submission/report",
             None,
-            None,
             "git-root-dir/report",
             id="Not a repository folder, and no repository present.",
         ),
@@ -135,8 +132,7 @@ def test_check_name(
             {},
             [],
             "top-level-folder",
-            "Git repository found at",
-            None,
+            LogType.FATAL_GIT_EXTRA_REPO,
             ".",
             id="Git repo present when it shouldn't be.",
         ),
@@ -149,8 +145,7 @@ def test_check_name(
             {},
             [],
             "top-level-folder/my-git-submission",
-            None,
-            "Repository was not on the main branch, switching now...",
+            LogType.WARN_GIT_NOT_ON_MAIN,
             "git-root-dir",
             id="Wrong branch is checked out.",
         ),
@@ -163,8 +158,7 @@ def test_check_name(
             {},
             ["flibble", "master", "foobar"],
             "top-level-folder/my-git-submission",
-            None,
-            "Repository does not have a main branch, but found master, which is an acceptable alternative. Switching now...",
+            LogType.WARN_GIT_USES_MAIN_ALT,
             "git-root-dir",
             id="Master in place of main, and acceptable.",
         ),
@@ -178,8 +172,7 @@ def test_check_name(
             {},
             [],
             "top-level-folder/my-git-submission",
-            "Could not find 'main' branch, or any other allowable reference.",
-            None,
+            LogType.FATAL_GIT_NO_VALID_BRANCH,
             "git-root-dir",
             id="No allowable references.",
         ),
@@ -189,8 +182,7 @@ def test_check_name(
             {"untracked": ["not_tracked.py"]},
             [],
             "top-level-folder/my-git-submission",
-            "You have untracked changes in your git repository:",
-            None,
+            LogType.FATAL_GIT_UNTRACKED,
             "git-root-dir",
             id="Untracked file.",
         ),
@@ -200,8 +192,7 @@ def test_check_name(
             {"unstaged": ["c1.py"]},
             [],
             "top-level-folder/my-git-submission",
-            "You have unstaged changes in your git repository: ",
-            None,
+            LogType.FATAL_GIT_UNSTAGED,
             "git-root-dir",
             id="Unstaged file.",
         ),
@@ -211,8 +202,7 @@ def test_check_name(
             {"uncommitted": ["c1.py"]},
             [],
             "top-level-folder/my-git-submission",
-            "You have uncommitted changes in your git repository: ",
-            None,
+            LogType.FATAL_GIT_UNCOMMITTED,
             "git-root-dir",
             id="Uncommitted file.",
         ),
@@ -229,8 +219,7 @@ def test_check_git_repo(
     template_directory: Directory,
     allowable_other_branches: List[str],
     dir_to_compare: Path,
-    expect_error: Optional[str],
-    expect_warning: Optional[str],
+    expected_entry_type: Optional[LogType],
     subdir_to_check: str,
 ) -> None:
     """
@@ -240,24 +229,14 @@ def test_check_git_repo(
     dir_to_compare = tmp_path / dir_to_compare
     assert dir_to_compare.is_dir(), f"{dir_to_compare} is not a directory!"
 
-    got_error, got_warning = template_directory[subdir_to_check].check_git_repo(
+    git_log_entry = template_directory[subdir_to_check].check_git_repo(
         dir_to_compare, *allowable_other_branches
     )
 
-    if expect_error is not None:
-        assert isinstance(
-            got_error, AssignmentCheckerError
-        ), f"Wrong error type received ({type(got_error).__name__})."
-        with pytest.raises(AssignmentCheckerError, match=expect_error):
-            raise got_error
+    if expected_entry_type is not None:
+        assert git_log_entry.log_type == expected_entry_type
     else:
-        assert got_error is None, "AssignmentCheckerError was received, but not expected."
-    if expect_warning is None:
-        assert got_warning is None, "A warning was received but not expected."
-    else:
-        assert (
-            got_warning == expect_warning
-        ), "Incorrect (or no) warning was received, but expected."
+        assert git_log_entry is None
 
 
 @pytest.mark.parametrize(
@@ -344,10 +323,38 @@ def test_check_files(
     if isinstance(expected_optional, list):
         expected_optional = set(expected_optional)
 
-    missing, unexpected, optional = template_directory[subdir_to_check].check_files(
-        tmp_path / dir_name
-    )
+    logger = template_directory[subdir_to_check].check_files(tmp_path / dir_name)
 
-    assert missing == expected_missing, "Not all missing files were flagged."
-    assert unexpected == expected_unexpected, "Not all unexpected files were identified."
-    assert optional == expected_optional, "Optional files were incorrectly identified."
+    missing_files = [
+        entry for entry in logger.warnings if entry.log_type == LogType.WARN_FILE_NOT_FOUND
+    ]
+    unexpected_files = [
+        entry for entry in logger.warnings if entry.log_type == LogType.WARN_UNEXPECTED_FILE
+    ]
+    optional_files = [
+        entry for entry in logger.information if entry.log_type == LogType.INFO_FOUND_OPTIONAL_FILE
+    ]
+
+    if expected_missing:
+        assert len(missing_files) == 1
+        assert (
+            set(missing_files[0].content) == expected_missing
+        ), "Not all missing files were flagged."
+    else:
+        assert len(missing_files) == 0
+
+    if unexpected_files:
+        assert len(unexpected_files) == 1
+        assert (
+            set(unexpected_files[0].content) == expected_unexpected
+        ), "Not all unexpected files were identified."
+    else:
+        assert len(unexpected_files) == 0
+
+    if optional_files:
+        assert len(optional_files) == 1
+        assert (
+            set(optional_files[0].content) == expected_optional
+        ), "Optional files were incorrectly identified."
+    else:
+        assert len(optional_files) == 0

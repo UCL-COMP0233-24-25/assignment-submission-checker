@@ -5,6 +5,7 @@ from typing import Dict, List
 import pytest
 
 from assignment_submission_checker.directory import Directory
+from assignment_submission_checker.logging.log_types import LogType
 
 
 @pytest.fixture
@@ -89,12 +90,9 @@ def A1_2024_2025_git_specs() -> Dict[str, str]:
 def test_on_A1_2024_2025(
     setup_folder_structure_with_git, tmp_path: Path, A1_2024_2025: Directory
 ) -> None:
-    fatal, warnings, information = A1_2024_2025.check_against_directory(
-        tmp_path / "depot_locations_test_student"
-    )
+    logger = A1_2024_2025.check_against_directory(tmp_path / "depot_locations_test_student")
 
-    assert fatal is None, "Fatal error thrown on an otherwise OK assignment!"
+    assert not logger.fatal, "Fatal error thrown on an otherwise OK assignment!"
     assert (
-        len(warnings) == 1
-        and warnings[0] == "Repository was not on the main branch, switching now..."
+        len(logger.warnings) == 1 and logger.warnings[0].log_type == LogType.WARN_GIT_NOT_ON_MAIN
     ), "Exactly one warning should have been thrown: for the repo being on the wrong branch."
